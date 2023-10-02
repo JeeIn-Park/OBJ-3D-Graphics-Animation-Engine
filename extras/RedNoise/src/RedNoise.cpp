@@ -37,8 +37,8 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     glm::vec3 vec;
     for(int i = 0; i < numberOfValues; i ++){
         vec.x = x_list[i];
-        vec.y = x_list[i];
-        vec.z = x_list[i];
+        vec.y = y_list[i];
+        vec.z = z_list[i];
         result.push_back(vec);
     }
     //use calculated last value as to if the gap cannot be represented by float
@@ -85,6 +85,13 @@ int main(int argc, char *argv[]) {
 //    std::vector<float> result;
 //    result = interpolateSingleFloats(2.2, 8.5, 7);
 //    for(size_t i=0; i<result.size(); i++) std::cout << result[i] << " ";
+//    std::cout << std::endl;
+
+//    std::vector<glm::vec3> result;
+//    glm::vec3 from(1.0, 4.0, 9.2);
+//    glm::vec3 to(4.0, 1.0, 9.8);
+//    result = interpolateThreeElementValues(from, to, 4);
+//    for(size_t i=0; i<result.size(); i++) std::cout << result[i];
 //    std::cout << std::endl;
 
 	while (true) {
