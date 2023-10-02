@@ -3,6 +3,7 @@
 #include <Utils.h>
 #include <fstream>
 #include <vector>
+#include "glm/glm.hpp"
 
 #define WIDTH 320
 #define HEIGHT 240
@@ -15,13 +16,32 @@ std::vector<float> interpolateSingleFloats(float from, float to, int numberOfVal
     int numberOfGap = numberOfValues - 1;
     gap = (to - from)/numberOfGap;
 
-    float x = from;
+    float x;
     for (int i = 0; i < numberOfGap; ++i) {
         x = x + gap;
         result.push_back(x);
     }
     //use calculated last value as to if the gap cannot be represented by float
+    return result;
+}
 
+
+std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 to, int numberOfValues){
+    std::vector<glm::vec3> result;
+    result.push_back(from);
+
+    std::vector<float> x_list = interpolateSingleFloats(from.x, to.x, numberOfValues);
+    std::vector<float> y_list = interpolateSingleFloats(from.y, to.y, numberOfValues);
+    std::vector<float> z_list = interpolateSingleFloats(from.z, to.z, numberOfValues);
+
+    glm::vec3 vec;
+    for(int i = 0; i < numberOfValues; i ++){
+        vec.x = x_list[i];
+        vec.y = x_list[i];
+        vec.z = x_list[i];
+        result.push_back(vec);
+    }
+    //use calculated last value as to if the gap cannot be represented by float
     return result;
 }
 
