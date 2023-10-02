@@ -7,14 +7,39 @@
 #define WIDTH 320
 #define HEIGHT 240
 
+std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
+    std::vector<float> result;
+    result.push_back(from);
+
+    float gap;
+    int numberOfGap = numberOfValues - 1;
+    gap = (to - from)/numberOfGap;
+
+    float x = from;
+    for (int i = 0; i < numberOfGap; ++i) {
+        x = x + gap;
+        result.push_back(x);
+    }
+    //use calculated last value as to if the gap cannot be represented by float
+
+    return result;
+}
+
 void draw(DrawingWindow &window) {
 	window.clearPixels();
+    std::vector<float> gradation = interpolateSingleFloats(0, 255, window.width);
 	for (size_t y = 0; y < window.height; y++) {
 		for (size_t x = 0; x < window.width; x++) {
-			float red = rand() % 256;
-			float green = 0.0;
-			float blue = 0.0;
-			uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
+            float brightness = 255 - gradation[x];
+            uint32_t colour = (255 << 24) + (int(brightness) << 16) + (int(brightness) << 8) + int(brightness);
+
+
+//			float red = 0.0;
+//			float green = 0.0;
+//			float blue = 0.0;
+//			uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
+
+
 			window.setPixelColour(x, y, colour);
 		}
 	}
@@ -32,42 +57,15 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 	}
 }
 
-std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
-    std::vector<float> result;
-    // from - a floating point number to start from
-	// to - a floating point number to go up to
-	// numberOfValues - the number of steps required from the start to the end
-	
-	/*this fuction should return an evenly spaced list of size numberOfValues 
-	that contains floating point bumbers between froom and to. */
-    result.push_back(from);
-
-    float gap;
-    int numberOfGap = numberOfValues - 1;
-    gap = (to - from)/numberOfGap;
-
-    float x = from;
-    for (int i = 0; i < numberOfGap; ++i) {
-        x = x + gap;
-        result.push_back(x);
-    }
-    //use calculated last value as to if the gap cannot be represented by float
-
-    return result;
-}
-
 
 int main(int argc, char *argv[]) {
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
 
-	std::vector<float> result;
-	result = interpolateSingleFloats(2.2, 8.5, 7);
-	for(size_t i=0; i<result.size(); i++) std::cout << result[i] << " ";
-	std::cout << std::endl;
-    // std::cout refers to the character output object of the standard library
-    // std::endl is a flushed newline
-    // size_t is an unsigned integer type provided by C++ that is useful for representing the size of things (such as vectors)
+//    std::vector<float> result;
+//    result = interpolateSingleFloats(2.2, 8.5, 7);
+//    for(size_t i=0; i<result.size(); i++) std::cout << result[i] << " ";
+//    std::cout << std::endl;
 
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
