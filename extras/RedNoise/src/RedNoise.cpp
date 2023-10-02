@@ -32,9 +32,43 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 	}
 }
 
+std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
+    std::vector<float> result;
+    // from - a floating point number to start from
+	// to - a floating point number to go up to
+	// numberOfValues - the number of steps required from the start to the end
+	
+	/*this fuction should return an evenly spaced list of size numberOfValues 
+	that contains floating point bumbers between froom and to. */
+    result.push_back(from);
+
+    float gap;
+    int numberOfGap = numberOfValues - 1;
+    gap = (to - from)/numberOfGap;
+
+    float x = from;
+    for (int i = 0; i < numberOfGap; ++i) {
+        x = x + gap;
+        result.push_back(x);
+    }
+    //use calculated last value as to if the gap cannot be represented by float
+
+    return result;
+}
+
+
 int main(int argc, char *argv[]) {
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
+
+	std::vector<float> result;
+	result = interpolateSingleFloats(2.2, 8.5, 7);
+	for(size_t i=0; i<result.size(); i++) std::cout << result[i] << " ";
+	std::cout << std::endl;
+    // std::cout refers to the character output object of the standard library
+    // std::endl is a flushed newline
+    // size_t is an unsigned integer type provided by C++ that is useful for representing the size of things (such as vectors)
+
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
