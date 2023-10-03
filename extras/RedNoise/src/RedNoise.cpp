@@ -16,12 +16,13 @@ std::vector<float> interpolateSingleFloats(float from, float to, int numberOfVal
     int numberOfGap = numberOfValues - 1;
     gap = (to - from)/numberOfGap;
 
-    float x;
-    for (int i = 0; i < numberOfGap; ++i) {
+    float x = from;
+    for (int i = 0; i < (numberOfGap-1); ++i) {
         x = x + gap;
         result.push_back(x);
     }
-    //use calculated last value as to if the gap cannot be represented by float
+    result.push_back(to);
+    //use to as last value, unrepresented gap can happen between two last values
     return result;
 }
 
