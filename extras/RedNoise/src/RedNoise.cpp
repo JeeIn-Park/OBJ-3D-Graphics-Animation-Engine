@@ -84,28 +84,29 @@ int main(int argc, char *argv[]) {
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
 
-    std::vector<float> result;
-    result = interpolateSingleFloats(2.2, 8.5, 7);
-    for(size_t i=0; i<result.size(); i++) std::cout << result[i] << " ";
-    std::cout << std::endl;
-
-    std::vector<glm::vec3> result3;
-    glm::vec3 from(1.0, 4.0, 9.2);
-    glm::vec3 to(4.0, 1.0, 9.8);
-    result3 = interpolateThreeElementValues(from, to, 4);
-//    for(size_t i=0; i<result.size(); i++) std::cout << result[i];
+    // check interpolateSingleFloats
+//    std::vector<float> result;
+//    result = interpolateSingleFloats(2.2, 8.5, 7);
+//    for(size_t i=0; i<result.size(); i++) std::cout << result[i] << " ";
 //    std::cout << std::endl;
 
+    // check interpolateThreeElementValues
+//    std::vector<glm::vec3> result3;
+//    glm::vec3 from(1.0, 4.0, 9.2);
+//    glm::vec3 to(4.0, 1.0, 9.8);
+//    result3 = interpolateThreeElementValues(from, to, 4);
+//    for(size_t i=0; i<result.size(); i++) std::cout << result[i];
+//    std::cout << std::endl;
     // Print the result to the command line
-    for (const auto& vec : result3) {
-        std::cout << "Result: (" << vec.x << ", " << vec.y << ", " << vec.z << ")" << std::endl;
-    }
+//    for (const auto& vec : result3) {
+//        std::cout << "Result: (" << vec.x << ", " << vec.y << ", " << vec.z << ")" << std::endl;
+//    }
 
-//	while (true) {
-//		// We MUST poll for events - otherwise the window will freeze !
-//		if (window.pollForInputEvents(event)) handleEvent(event, window);
-//		draw(window);
-//		// Need to render the frame at the end, or nothing actually gets shown on the screen !
-//		window.renderFrame();
-//	}
+	while (true) {
+		// We MUST poll for events - otherwise the window will freeze !
+		if (window.pollForInputEvents(event)) handleEvent(event, window);
+		draw(window);
+		// Need to render the frame at the end, or nothing actually gets shown on the screen !
+		window.renderFrame();
+	}
 }
