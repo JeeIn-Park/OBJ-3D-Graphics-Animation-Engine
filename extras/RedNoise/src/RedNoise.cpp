@@ -42,6 +42,7 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
         vec.z = z_list[i];
         result.push_back(vec);
     }
+
     //use calculated last value as to if the gap cannot be represented by float
     return result;
 }
