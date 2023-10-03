@@ -47,19 +47,19 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
 
 void draw(DrawingWindow &window) {
 	window.clearPixels();
-    std::vector<float> gradation = interpolateSingleFloats(0, 255, window.width);
-	for (size_t y = 0; y < window.height; y++) {
+    glm::vec3 topLeft(255, 0, 0);        // red
+    glm::vec3 topRight(0, 0, 255);       // blue
+    glm::vec3 bottomRight(0, 255, 0);    // green
+    glm::vec3 bottomLeft(255, 255, 0);   // yellow
+
+    std::vector<glm::vec3> from_list = interpolateThreeElementValues(topLeft, bottomLeft, window.width);
+    std::vector<glm::vec3> to_list = interpolateThreeElementValues(topRight, bottomRight, window.width);
+
+    for (size_t y = 0; y < window.height; y++) {
+        std::vector<glm::vec3> colour_gradation = interpolateThreeElementValues(  from_list[y], to_list[y], window.width);
 		for (size_t x = 0; x < window.width; x++) {
-            float brightness = 255 - gradation[x];
-            uint32_t colour = (255 << 24) + (int(brightness) << 16) + (int(brightness) << 8) + int(brightness);
-
-
-//			float red = 0.0;
-//			float green = 0.0;
-//			float blue = 0.0;
-//			uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
-
-
+            glm::vec3 point = colour_gradation[x];
+            uint32_t colour = (255 << 24) + (int(point.x) << 16) + (int(point.y) << 8) + int(point.z);
 			window.setPixelColour(x, y, colour);
 		}
 	}
