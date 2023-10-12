@@ -4,6 +4,8 @@
 #include <fstream>
 #include <vector>
 #include "glm/glm.hpp"
+#include <CanvasPoint.h>
+#include <Colour.h>
 
 #define WIDTH 320
 #define HEIGHT 240
