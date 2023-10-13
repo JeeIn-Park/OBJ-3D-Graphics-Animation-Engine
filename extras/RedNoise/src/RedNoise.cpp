@@ -49,8 +49,7 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
-std::vector<CanvasPoint>  lineDraw(CanvasPoint from, CanvasPoint to){
-    std::vector<CanvasPoint> line;
+std::vector<CanvasPoint>  lineDraw(CanvasPoint from, CanvasPoint to, std::vector<CanvasPoint> line){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
 
@@ -110,29 +109,32 @@ void draw(DrawingWindow &window) {
 
     // line draw
 
-
-    std::vector<CanvasPoint> topLeft_centre = lineDraw(
+    std::vector<CanvasPoint> line;
+    // topLeft_centre
+            line = lineDraw(
             CanvasPoint(0,0),
-            CanvasPoint((window.width/2), (window.height/2)));
-    std::vector<CanvasPoint> topRight_centre = lineDraw(
-            CanvasPoint(window.width, 0),
-            CanvasPoint((window.width/2), (window.height/2)));
-    std::vector<CanvasPoint> middle = lineDraw(
+            CanvasPoint((window.width/2), (window.height/2)), line);
+    // topRight_centre
+            line = lineDraw(
+            CanvasPoint(window.width-1, 0),
+            // CanvasPoint(window.width-1, 0),
+            // 320,0 not on visible screen area
+            CanvasPoint((window.width/2), (window.height/2)), line);
+    // middle
+            line = lineDraw(
             CanvasPoint((window.width/2), 0),
-            CanvasPoint((window.width/2),window.height));
-    std::vector<CanvasPoint> third_horizontal = lineDraw(
+            CanvasPoint((window.width/2),window.height), line);
+    // third_horizontal
+            line = lineDraw(
             CanvasPoint((window.width/3), (window.height/2)),
-            CanvasPoint(2*(window.width/3), (window.height/2)));
+            CanvasPoint(2*(window.width/3), (window.height/2)), line);
 
-    std::vector<CanvasPoint> allLines;
 
-    for (size_t y = 0; y < window.height; y++) {
-		for (size_t x = 0; x < window.width; x++) {
-            glm::vec3 point = colour_gradation[x];
-            uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-			window.setPixelColour(x, y, colour);
-		}
-	}
+    for ( int i = 0; i < line.size() ; ++ i){
+        CanvasPoint point = line[i];
+        // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
+        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+    };
 }
 
 
