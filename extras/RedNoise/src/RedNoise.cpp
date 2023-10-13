@@ -1,11 +1,9 @@
-#include <CanvasTriangle.h>
 #include <DrawingWindow.h>
 #include <Utils.h>
 #include <fstream>
 #include <vector>
 #include "glm/glm.hpp"
-#include <CanvasPoint.h>
-#include <Colour.h>
+#include <CanvasTriangle.h>
 
 #define WIDTH 320
 #define HEIGHT 240
@@ -87,13 +85,35 @@ std::vector<CanvasPoint>  lineDraw(CanvasPoint from, CanvasPoint to, std::vector
     return line;
 }
 
+void strokedTriangle (DrawingWindow &window) {
+    CanvasTriangle triangle;
+    std::vector<CanvasPoint> line;
+
+    triangle.v0().x = rand() % window.width;
+    triangle.v0().y = rand() % window.height;
+    triangle.v1().x = rand() % window.width;
+    triangle.v1().y = rand() % window.height;
+    triangle.v2().x = rand() % window.width;
+    triangle.v2().y = rand() % window.height;
+    line = lineDraw(triangle.v0(), triangle.v1(), line);
+    line = lineDraw(triangle.v1(), triangle.v2(), line);
+    line = lineDraw(triangle.v0(), triangle.v2(), line);
+
+    uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
+
+    for (int i = 0; i < line.size(); ++i) {
+        CanvasPoint point = line[i];
+        window.setPixelColour(point.x, point.y,colour);
+    }
+}
+
 
 void draw(DrawingWindow &window) {
-	window.clearPixels();
-    glm::vec3 red(255, 0, 0);
-    glm::vec3 blue(0, 0, 255);
-    glm::vec3 green(0, 255, 0);
-    glm::vec3 yellow(255, 255, 0);
+//	window.clearPixels();
+//    glm::vec3 red(255, 0, 0);
+//    glm::vec3 blue(0, 0, 255);
+//    glm::vec3 green(0, 255, 0);
+//    glm::vec3 yellow(255, 255, 0);
 
     // gradation rainbow
 //    std::vector<glm::vec3> from_list = interpolateThreeElementValues(topLeft, bottomLeft, window.width);
@@ -107,34 +127,33 @@ void draw(DrawingWindow &window) {
 //		}
 //	}
 
-    // line draw
+      // line draw
+//    std::vector<CanvasPoint> line;
+//    // topLeft_centre
+//            line = lineDraw(
+//            CanvasPoint(0,0),
+//            CanvasPoint((window.width/2), (window.height/2)), line);
+//    // topRight_centre
+//            line = lineDraw(
+//            CanvasPoint(window.width-1, 0),
+//            // CanvasPoint(window.width-1, 0),
+//            // 320,0 not on visible screen area
+//            CanvasPoint((window.width/2), (window.height/2)), line);
+//    // middle
+//            line = lineDraw(
+//            CanvasPoint((window.width/2), 0),
+//            CanvasPoint((window.width/2),window.height), line);
+//    // third_horizontal
+//            line = lineDraw(
+//            CanvasPoint((window.width/3), (window.height/2)),
+//            CanvasPoint(2*(window.width/3), (window.height/2)), line);
+//
+//    for ( int i = 0; i < line.size() ; ++ i){
+//        CanvasPoint point = line[i];
+//        // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
+//        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+//    };
 
-    std::vector<CanvasPoint> line;
-    // topLeft_centre
-            line = lineDraw(
-            CanvasPoint(0,0),
-            CanvasPoint((window.width/2), (window.height/2)), line);
-    // topRight_centre
-            line = lineDraw(
-            CanvasPoint(window.width-1, 0),
-            // CanvasPoint(window.width-1, 0),
-            // 320,0 not on visible screen area
-            CanvasPoint((window.width/2), (window.height/2)), line);
-    // middle
-            line = lineDraw(
-            CanvasPoint((window.width/2), 0),
-            CanvasPoint((window.width/2),window.height), line);
-    // third_horizontal
-            line = lineDraw(
-            CanvasPoint((window.width/3), (window.height/2)),
-            CanvasPoint(2*(window.width/3), (window.height/2)), line);
-
-
-    for ( int i = 0; i < line.size() ; ++ i){
-        CanvasPoint point = line[i];
-        // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
-    };
 }
 
 
@@ -144,6 +163,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
 		else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
 		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
+        else if (event.key.keysym.sym == SDLK_u) strokedTriangle(window);
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
 		window.savePPM("output.ppm");
 		window.saveBMP("output.bmp");
@@ -176,7 +196,7 @@ int main(int argc, char *argv[]) {
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
-		draw(window);
+		// draw(window);
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();
 	}
