@@ -54,6 +54,20 @@ std::vector<CanvasPoint>  lineDraw(CanvasPoint from, CanvasPoint to){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
 
+//    float xDiff;
+//    if (to.x > from.x){
+//        xDiff = to.x - from.x;
+//    } else {
+//        xDiff = from.x - to.x;
+//    };
+//
+//    float yDiff = to.y - from.y;
+//    if (to.y > from.y){
+//        yDiff = to.y - from.y;
+//    } else {
+//        yDiff = from.y - to.y;
+//    };
+
     float numberOfSteps;
     if (xDiff > yDiff){
         numberOfSteps = abs(xDiff);
@@ -98,13 +112,19 @@ void draw(DrawingWindow &window) {
 
 
     std::vector<CanvasPoint> topLeft_centre = lineDraw(
-            CanvasPoint(0,0), CanvasPoint(window.width, window.height));
+            CanvasPoint(0,0),
+            CanvasPoint((window.width/2), (window.height/2)));
     std::vector<CanvasPoint> topRight_centre = lineDraw(
-            CanvasPoint(window.width, 0), CanvasPoint());
+            CanvasPoint(window.width, 0),
+            CanvasPoint((window.width/2), (window.height/2)));
     std::vector<CanvasPoint> middle = lineDraw(
-            CanvasPoint(), CanvasPoint());
+            CanvasPoint((window.width/2), 0),
+            CanvasPoint((window.width/2),window.height));
     std::vector<CanvasPoint> third_horizontal = lineDraw(
-            CanvasPoint(), CanvasPoint());
+            CanvasPoint((window.width/3), (window.height/2)),
+            CanvasPoint(2*(window.width/3), (window.height/2)));
+
+    std::vector<CanvasPoint> allLines;
 
     for (size_t y = 0; y < window.height; y++) {
 		for (size_t x = 0; x < window.width; x++) {
