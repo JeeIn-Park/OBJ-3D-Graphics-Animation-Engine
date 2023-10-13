@@ -1,4 +1,4 @@
-# Install script for directory: /home/jeein/Desktop/year3_term1/CG/git/extras/RedNoise
+# Install script for directory: /home/jeein/Documents/CG/computer_graphics/extras/RedNoise
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/jeein/Desktop/year3_term1/CG/git/extras/RedNoise/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

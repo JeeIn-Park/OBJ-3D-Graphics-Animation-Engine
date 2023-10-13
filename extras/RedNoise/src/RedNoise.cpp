@@ -49,38 +49,72 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
+std::vector<CanvasPoint>  lineDraw(CanvasPoint from, CanvasPoint to){
+    std::vector<CanvasPoint> line;
+    float xDiff = to.x - from.x;
+    float yDiff = to.y - from.y;
+
+    float numberOfSteps;
+    if (xDiff > yDiff){
+        numberOfSteps = abs(xDiff);
+    } else {
+        numberOfSteps = abs(yDiff);
+    };
+
+    float xStepSize = xDiff/numberOfSteps;
+    float yStepSize = yDiff/numberOfSteps;
+
+    CanvasPoint point;
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        point.x = from.x + (xStepSize*i);
+        point.y = from.y + (yStepSize*i);
+        line.push_back(point);
+    }
+
+    return line;
+}
+
+
 void draw(DrawingWindow &window) {
 	window.clearPixels();
-    glm::vec3 topLeft(255, 0, 0);        // red
-    glm::vec3 topRight(0, 0, 255);       // blue
-    glm::vec3 bottomRight(0, 255, 0);    // green
-    glm::vec3 bottomLeft(255, 255, 0);   // yellow
+    glm::vec3 red(255, 0, 0);
+    glm::vec3 blue(0, 0, 255);
+    glm::vec3 green(0, 255, 0);
+    glm::vec3 yellow(255, 255, 0);
 
-    std::vector<glm::vec3> from_list = interpolateThreeElementValues(topLeft, bottomLeft, window.width);
-    std::vector<glm::vec3> to_list = interpolateThreeElementValues(topRight, bottomRight, window.width);
+    // gradation rainbow
+//    std::vector<glm::vec3> from_list = interpolateThreeElementValues(topLeft, bottomLeft, window.width);
+//    std::vector<glm::vec3> to_list = interpolateThreeElementValues(topRight, bottomRight, window.width);
+//    for (size_t y = 0; y < window.height; y++) {
+//        std::vector<glm::vec3> colour_gradation = interpolateThreeElementValues(  from_list[y], to_list[y], window.width);
+//		for (size_t x = 0; x < window.width; x++) {
+//            glm::vec3 point = colour_gradation[x];
+//            uint32_t colour = (255 << 24) + (int(point.x) << 16) + (int(point.y) << 8) + int(point.z);
+//			window.setPixelColour(x, y, colour);
+//		}
+//	}
+
+    // line draw
+
+
+    std::vector<CanvasPoint> topLeft_centre = lineDraw(
+            CanvasPoint(0,0), CanvasPoint(window.width, window.height));
+    std::vector<CanvasPoint> topRight_centre = lineDraw(
+            CanvasPoint(window.width, 0), CanvasPoint());
+    std::vector<CanvasPoint> middle = lineDraw(
+            CanvasPoint(), CanvasPoint());
+    std::vector<CanvasPoint> third_horizontal = lineDraw(
+            CanvasPoint(), CanvasPoint());
 
     for (size_t y = 0; y < window.height; y++) {
-        std::vector<glm::vec3> colour_gradation = interpolateThreeElementValues(  from_list[y], to_list[y], window.width);
 		for (size_t x = 0; x < window.width; x++) {
             glm::vec3 point = colour_gradation[x];
-            uint32_t colour = (255 << 24) + (int(point.x) << 16) + (int(point.y) << 8) + int(point.z);
+            uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
 			window.setPixelColour(x, y, colour);
 		}
 	}
 }
 
-void lineDraw(float fromX, float fromY, float toX, float toY){
-    float xDiff = toX - fromX;
-    float yDiff = toY - fromY;
-    float numberOfSteps = max(std::abs(xDiff), std::abs(yDiff));
-    float xStepSize = xDiff/numberOfSteps;
-    float yStepSize = yDiff/numberOfSteps;
-    for (float i = 0.0; i<=numberOfSteps, i ++){
-        float x = fromX + (xStepSize*i);
-        float y = fromY + (yStepSize*i);
-        display.setPixelColour(round(x), round(y), BLACK);
-    }
-}
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
