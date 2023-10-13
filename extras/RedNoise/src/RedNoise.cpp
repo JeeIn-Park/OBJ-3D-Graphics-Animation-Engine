@@ -69,6 +69,19 @@ void draw(DrawingWindow &window) {
 	}
 }
 
+void lineDraw(float fromX, float fromY, float toX, float toY){
+    float xDiff = toX - fromX;
+    float yDiff = toY - fromY;
+    float numberOfSteps = max(std::abs(xDiff), std::abs(yDiff));
+    float xStepSize = xDiff/numberOfSteps;
+    float yStepSize = yDiff/numberOfSteps;
+    for (float i = 0.0; i<=numberOfSteps, i ++){
+        float x = fromX + (xStepSize*i);
+        float y = fromY + (yStepSize*i);
+        display.setPixelColour(round(x), round(y), BLACK);
+    }
+}
+
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
 		if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
