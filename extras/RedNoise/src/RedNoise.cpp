@@ -66,7 +66,7 @@ std::vector<CanvasPoint>  lineList(CanvasPoint from, CanvasPoint to, std::vector
 //    };
 
     float numberOfSteps;
-    if (xDiff > yDiff){
+    if (abs(xDiff) > abs(yDiff)){
         numberOfSteps = abs(xDiff);
     } else {
         numberOfSteps = abs(yDiff);
