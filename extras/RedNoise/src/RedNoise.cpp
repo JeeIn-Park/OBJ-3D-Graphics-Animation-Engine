@@ -67,7 +67,7 @@ std::vector<CanvasPoint>  lineList(CanvasPoint from, CanvasPoint to, std::vector
         point.y = from.y + (yStepSize*i);
         line.push_back(point);
     }
-    line.push_back(to);
+
     return line;
 }
 
@@ -86,7 +86,7 @@ void strokedTriangle (DrawingWindow &window) {
     triangle.v2().x = rand() % window.width;
     triangle.v2().y = rand() % window.height;
     while (((triangle.v0().x == triangle.v2().x) && ((triangle.v0().y == triangle.v2().y)))
-        || ((triangle.v1().x == triangle.v2().x) && ((triangle.v1().y == triangle.v2().y)))){
+           || ((triangle.v1().x == triangle.v2().x) && ((triangle.v1().y == triangle.v2().y)))){
         triangle.v2().x = rand() % window.width;
         triangle.v2().y = rand() % window.height;
     }
@@ -129,52 +129,54 @@ void filledTriangle (DrawingWindow &window) {
     if (p1.y > p2.y)   std::swap(p1, p2);
     if (p0.y > p1.y)   std::swap(p0, p1);
 
+
     std::vector<CanvasPoint> l0;
     std::vector<CanvasPoint> l1;
     std::vector<CanvasPoint> l2;
-    l0 = lineList(p0, p1, l1);
-    l1 = lineList(p1, p2, l2);
-    l2 = lineList(p0, p2, l0);
+    l0 = lineList(p0, p2, l0);
+    l1 = lineList(p0, p1, l1);
+    l2 = lineList(p1, p2, l2);
 
-    uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
+
+
+    uint32_t colour = (255 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
+
+
+
+//    for (int i = p0.y+1; i < p1.y; ++i){
+//        std::vector<CanvasPoint> line;
+//        line = lineList(l0[i-p0.y], l1[i-p0.y], line);
+//        for (int l = 0; l < line.size(); ++l) {
+//            CanvasPoint point = line[l];
+//            window.setPixelColour(point.x, point.y, colour);
+//        }
+//    }
 
 
     for (float i = p0.y; i < p1.y; ++i){
         std::vector<CanvasPoint> fill;
-        for (int k = 0; k < l0.size(); ++k) {
-            fill = lineList(l0[k], l2[k], fill);
+        for (float k = 0; l1[k].y <= l0[i-p0.y].y; ++k){
+            fill = lineList(l0[i-p0.y], l1[k], fill);
         }
-        for (int k = 0; k < fill.size(); ++k){
-            window.setPixelColour(fill[k].x, fill[k].y,colour);
+        for (int l = 0; l < fill.size(); ++l) {
+            CanvasPoint point = fill[l];
+            window.setPixelColour(point.x, point.y, colour);
         }
     }
 
-//    for (int k = 0; k < fill.size(); ++k) {
-//        CanvasPoint point = fill[k];
-//        window.setPixelColour(point.x, point.y,colour);
-//    }
-
-//    for (int i = p1.y; i < p2.y; ++i){
-//        window.setPixelColour(, (255 << 24) + (255 << 16) + (255 << 8) + 255);
-//    }
-
-
-    for (float i = 0; i < l1.size(); ++i) {
-        CanvasPoint point = l1[i];
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
-    }
-
-    for (int i = 0; i < l2.size(); ++i) {
-        CanvasPoint point = l2[i];
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
-    }
 
     for (int i = 0; i < l0.size(); ++i) {
         CanvasPoint point = l0[i];
         window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
     }
-
-    window.getPixelColour(1,1);
+    for (int i = 0; i < l1.size(); ++i) {
+        CanvasPoint point = l1[i];
+        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+    }
+    for (int i = 0; i < l2.size(); ++i) {
+        CanvasPoint point = l2[i];
+        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+    }
 
 //    for (int i = (p2.y-p0.y); i < p2.y; ++i){
 //        window.setPixelColour(, (255 << 24) + (255 << 16) + (255 << 8) + 255);
@@ -201,7 +203,7 @@ void draw(DrawingWindow &window) {
 //		}
 //	}
 
-      // line draw
+    // line draw
 //    std::vector<CanvasPoint> line;
 //    // topLeft_centre
 //            line = lineDraw(
@@ -232,23 +234,23 @@ void draw(DrawingWindow &window) {
 
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
-	if (event.type == SDL_KEYDOWN) {
-		if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
-		else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
-		else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
-		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
+    if (event.type == SDL_KEYDOWN) {
+        if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
+        else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
+        else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
+        else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
         else if (event.key.keysym.sym == SDLK_u) strokedTriangle(window);
         else if (event.key.keysym.sym == SDLK_f) filledTriangle(window);
-	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-		window.savePPM("output.ppm");
-		window.saveBMP("output.bmp");
-	}
+    } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+        window.savePPM("output.ppm");
+        window.saveBMP("output.bmp");
+    }
 }
 
 
 int main(int argc, char *argv[]) {
-	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
-	SDL_Event event;
+    DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
+    SDL_Event event;
 
     // check interpolateSingleFloats
 //    std::vector<float> result;
@@ -268,11 +270,11 @@ int main(int argc, char *argv[]) {
 //        std::cout << "Result: (" << vec.x << ", " << vec.y << ", " << vec.z << ")" << std::endl;
 //    }
 
-	while (true) {
-		// We MUST poll for events - otherwise the window will freeze !
-		if (window.pollForInputEvents(event)) handleEvent(event, window);
-		// draw(window);
-		// Need to render the frame at the end, or nothing actually gets shown on the screen !
-		window.renderFrame();
-	}
+    while (true) {
+        // We MUST poll for events - otherwise the window will freeze !
+        if (window.pollForInputEvents(event)) handleEvent(event, window);
+        // draw(window);
+        // Need to render the frame at the end, or nothing actually gets shown on the screen !
+        window.renderFrame();
+    }
 }
