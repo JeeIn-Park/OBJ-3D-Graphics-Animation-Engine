@@ -47,7 +47,7 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
-std::vector<CanvasPoint>  lineDraw(CanvasPoint from, CanvasPoint to, std::vector<CanvasPoint> line){
+std::vector<CanvasPoint>  lineList(CanvasPoint from, CanvasPoint to, std::vector<CanvasPoint> line){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
 
@@ -105,9 +105,9 @@ void strokedTriangle (DrawingWindow &window) {
         triangle.v2().y = rand() % window.height;
     }
 
-    line = lineDraw(triangle.v0(), triangle.v1(), line);
-    line = lineDraw(triangle.v1(), triangle.v2(), line);
-    line = lineDraw(triangle.v0(), triangle.v2(), line);
+    line = lineList(triangle.v0(), triangle.v1(), line);
+    line = lineList(triangle.v1(), triangle.v2(), line);
+    line = lineList(triangle.v0(), triangle.v2(), line);
 
     uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
 
@@ -119,29 +119,40 @@ void strokedTriangle (DrawingWindow &window) {
 
 
 void filledTriangle (DrawingWindow &window) {
-    CanvasTriangle triangle;
-    std::vector<CanvasPoint> line;
-
     // random three canvas points
+    CanvasPoint p0;
+    p0.x = rand() % window.width;
+    p0.y = rand() % window.height;
     CanvasPoint p1;
     p1.x = rand() % window.width;
     p1.y = rand() % window.height;
+    while ((p0.x == p1.x) && ((p0.y == p1.y))){
+        p1.x = rand() % window.width;
+        p1.y = rand() % window.height;
+    }
     CanvasPoint p2;
     p2.x = rand() % window.width;
     p2.y = rand() % window.height;
-    CanvasPoint p3;
-    p3.x = rand() % window.width;
-    p3.y = rand() % window.height;
+    while (((p0.x == p2.x) && ((p0.y == p2.y))) || ((p1.x == p2.x) && ((p1.y == p2.y)))){
+        p1.x = rand() % window.width;
+        p1.y = rand() % window.height;
+    }
 
+    // sort points
+    if (p0.y > p1.y)   std::swap(p0, p1);
     if (p1.y > p2.y)   std::swap(p1, p2);
-    if (p2.y > p3.y)   std::swap(p2, p3);
-    if (p1.y > p2.y)   std::swap(p1, p2);
+    if (p0.y > p1.y)   std::swap(p0, p1);
 
-//
-//    std::swap()
-//    line = lineDraw(triangle.v0(), triangle.v1(), line);
-//    line = lineDraw(triangle.v1(), triangle.v2(), line);
-//    line = lineDraw(triangle.v0(), triangle.v2(), line);
+
+
+    CanvasTriangle triangle;
+    std::vector<CanvasPoint> line;
+
+
+
+    line = lineList(p0, p1, line);
+    line = lineList(p1, p2, line);
+    line = lineList(p2, p0, line);
 
 
 
