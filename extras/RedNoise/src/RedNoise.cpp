@@ -153,10 +153,10 @@ void filledTriangle (DrawingWindow &window) {
 //    }
 
     std::vector<CanvasPoint> fill;
-    float t = 0;
-    for (float i = 0; i < p1.y-p0.y; ++i){
+    int t = 0;
+    for (float i = 0; l1[i].y <= p1.y; ++i){
         std::vector<CanvasPoint> fill;
-        for (float k = t; l0[k].y <= l1[i].y; ++k){
+        for (int k = t; l0[k].y <= l1[i].y; ++k){
             fill = lineList(l0[k], l1[i], fill);
             t = k;
         }
@@ -165,6 +165,17 @@ void filledTriangle (DrawingWindow &window) {
             window.setPixelColour(point.x, point.y, colour);
         }
     }
+//    for (float i = 0; i < p2.y-p1.y; ++i){
+//        std::vector<CanvasPoint> fill;
+//        for (float k = t; l0[k].y <= l2[i].y; ++k){
+//            fill = lineList(l0[k], l2[i], fill);
+//            t = k;
+//        }
+//        for (int l = 0; l < fill.size(); ++l) {
+//            CanvasPoint point = fill[l];
+//            window.setPixelColour(point.x, point.y, colour);
+//        }
+//    }
 
 
 
