@@ -141,28 +141,23 @@ void filledTriangle (DrawingWindow &window) {
 
     uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
 
-    for (int i = 0; i < l0.size(); ++i) {
-        CanvasPoint point = l0[i];
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
-    }
+
     for (int i = 0; i < l1.size(); ++i) {
         CanvasPoint point = l1[i];
         window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
-    }
-
-    for (int i = p0.y+1; i < p1.y; ++i){
-        std::vector<CanvasPoint> line;
-        line = lineList(l0[i-p0.y], l1[i-p0.y], line);
-        for (int l = 0; l < line.size(); ++l) {
-            CanvasPoint point = line[l];
-            window.setPixelColour(point.x, point.y, colour);
-        }
     }
 
     for (int i = 0; i < l2.size(); ++i) {
         CanvasPoint point = l2[i];
         window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
     }
+
+    for (int i = 0; i < l0.size(); ++i) {
+        CanvasPoint point = l0[i];
+        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+    }
+
+    window.getPixelColour(1,1);
 
 //    for (int i = (p2.y-p0.y); i < p2.y; ++i){
 //        window.setPixelColour(, (255 << 24) + (255 << 16) + (255 << 8) + 255);
