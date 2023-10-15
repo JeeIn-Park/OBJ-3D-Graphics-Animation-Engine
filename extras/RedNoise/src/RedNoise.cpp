@@ -51,20 +51,6 @@ std::vector<CanvasPoint>  lineList(CanvasPoint from, CanvasPoint to, std::vector
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
 
-//    float xDiff;
-//    if (to.x > from.x){
-//        xDiff = to.x - from.x;
-//    } else {
-//        xDiff = from.x - to.x;
-//    };
-//
-//    float yDiff = to.y - from.y;
-//    if (to.y > from.y){
-//        yDiff = to.y - from.y;
-//    } else {
-//        yDiff = from.y - to.y;
-//    };
-
     float numberOfSteps;
     if (abs(xDiff) > abs(yDiff)){
         numberOfSteps = abs(xDiff);
@@ -144,24 +130,43 @@ void filledTriangle (DrawingWindow &window) {
     if (p0.y > p1.y)   std::swap(p0, p1);
 
 
-
-    CanvasTriangle triangle;
-    std::vector<CanvasPoint> line;
-
-
-
-    line = lineList(p0, p1, line);
-    line = lineList(p1, p2, line);
-    line = lineList(p2, p0, line);
+    std::vector<CanvasPoint> l0;
+    std::vector<CanvasPoint> l1;
+    std::vector<CanvasPoint> l2;
+    l0 = lineList(p0, p2, l0);
+    l1 = lineList(p0, p1, l1);
+    l2 = lineList(p1, p2, l2);
 
 
 
     uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
 
-    for (int i = 0; i < line.size(); ++i) {
-        CanvasPoint point = line[i];
+    for (int i = 0; i < l0.size(); ++i) {
+        CanvasPoint point = l0[i];
         window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
     }
+    for (int i = 0; i < l1.size(); ++i) {
+        CanvasPoint point = l1[i];
+        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+    }
+
+    for (int i = p0.y+1; i < p1.y; ++i){
+        std::vector<CanvasPoint> line;
+        line = lineList(l0[i-p0.y], l1[i-p0.y], line);
+        for (int l = 0; l < line.size(); ++l) {
+            CanvasPoint point = line[l];
+            window.setPixelColour(point.x, point.y, colour);
+        }
+    }
+
+    for (int i = 0; i < l2.size(); ++i) {
+        CanvasPoint point = l2[i];
+        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+    }
+
+//    for (int i = (p2.y-p0.y); i < p2.y; ++i){
+//        window.setPixelColour(, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+//    }
 }
 
 
