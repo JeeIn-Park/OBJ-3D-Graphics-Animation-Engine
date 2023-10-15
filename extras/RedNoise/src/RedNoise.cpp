@@ -67,7 +67,7 @@ std::vector<CanvasPoint>  lineList(CanvasPoint from, CanvasPoint to, std::vector
         point.y = from.y + (yStepSize*i);
         line.push_back(point);
     }
-
+    line.push_back(to);
     return line;
 }
 
@@ -129,7 +129,6 @@ void filledTriangle (DrawingWindow &window) {
     if (p1.y > p2.y)   std::swap(p1, p2);
     if (p0.y > p1.y)   std::swap(p0, p1);
 
-
     std::vector<CanvasPoint> l0;
     std::vector<CanvasPoint> l1;
     std::vector<CanvasPoint> l2;
@@ -138,11 +137,40 @@ void filledTriangle (DrawingWindow &window) {
     l2 = lineList(p1, p2, l2);
 
 
-
     uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
 
+    std::vector<CanvasPoint> fill;
+//    for (float i = p0.y; i < p1.y; ++i){
+//        while (){
+//
+//        }
+//        CanvasPoint from;
+//    }
+    for (float i = 0; i < p1.y-p0.y; ++i){
+        CanvasPoint from;
+        CanvasPoint to;
+        for (float k; k<l1.size(); ++k){
+            if (l1[k].y == p0.y + i){
+            from = l1[k];
+            }
+            if (l0[k].y == p0.y + i){
+                to = l1[k];
+            }
+        }
+        fill = lineList(from, to, fill);
+    }
 
-    for (int i = 0; i < l1.size(); ++i) {
+    for (int k = 0; k < fill.size(); ++k) {
+        CanvasPoint point = fill[k];
+        window.setPixelColour(point.x, point.y,colour);
+    }
+
+//    for (int i = p1.y; i < p2.y; ++i){
+//        window.setPixelColour(, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+//    }
+
+
+    for (float i = 0; i < l1.size(); ++i) {
         CanvasPoint point = l1[i];
         window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
     }
