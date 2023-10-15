@@ -95,7 +95,7 @@ void strokedTriangle (DrawingWindow &window) {
     line = lineList(triangle.v1(), triangle.v2(), line);
     line = lineList(triangle.v0(), triangle.v2(), line);
 
-    uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
+    uint32_t colour = (255 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
 
     for (int i = 0; i < line.size(); ++i) {
         CanvasPoint point = line[i];
@@ -152,17 +152,19 @@ void filledTriangle (DrawingWindow &window) {
 //        }
 //    }
 
-
-    for (float i = p0.y; i < p1.y; ++i){
+    float t = 0;
+    for (float i = 0; i < p1.y-p0.y; ++i){
         std::vector<CanvasPoint> fill;
-        for (float k = 0; l1[k].y <= l0[i-p0.y].y; ++k){
-            fill = lineList(l0[i-p0.y], l1[k], fill);
+        for (float k = t; l1[k].y <= l0[i].y; ++k){
+            fill = lineList(l0[i], l1[k], fill);
+            t = k;
         }
         for (int l = 0; l < fill.size(); ++l) {
             CanvasPoint point = fill[l];
             window.setPixelColour(point.x, point.y, colour);
         }
     }
+
 
 
     for (int i = 0; i < l0.size(); ++i) {
