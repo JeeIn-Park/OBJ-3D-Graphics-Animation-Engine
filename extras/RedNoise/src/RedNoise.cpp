@@ -93,8 +93,18 @@ void strokedTriangle (DrawingWindow &window) {
     triangle.v0().y = rand() % window.height;
     triangle.v1().x = rand() % window.width;
     triangle.v1().y = rand() % window.height;
+    while ((triangle.v0().x == triangle.v1().x) && ((triangle.v0().y == triangle.v1().y))){
+        triangle.v1().x = rand() % window.width;
+        triangle.v1().y = rand() % window.height;
+    }
     triangle.v2().x = rand() % window.width;
     triangle.v2().y = rand() % window.height;
+    while (((triangle.v0().x == triangle.v2().x) && ((triangle.v0().y == triangle.v2().y)))
+        || ((triangle.v1().x == triangle.v2().x) && ((triangle.v1().y == triangle.v2().y)))){
+        triangle.v2().x = rand() % window.width;
+        triangle.v2().y = rand() % window.height;
+    }
+
     line = lineDraw(triangle.v0(), triangle.v1(), line);
     line = lineDraw(triangle.v1(), triangle.v2(), line);
     line = lineDraw(triangle.v0(), triangle.v2(), line);
@@ -104,6 +114,42 @@ void strokedTriangle (DrawingWindow &window) {
     for (int i = 0; i < line.size(); ++i) {
         CanvasPoint point = line[i];
         window.setPixelColour(point.x, point.y,colour);
+    }
+}
+
+
+void filledTriangle (DrawingWindow &window) {
+    CanvasTriangle triangle;
+    std::vector<CanvasPoint> line;
+
+    // random three canvas points
+    CanvasPoint p1;
+    p1.x = rand() % window.width;
+    p1.y = rand() % window.height;
+    CanvasPoint p2;
+    p2.x = rand() % window.width;
+    p2.y = rand() % window.height;
+    CanvasPoint p3;
+    p3.x = rand() % window.width;
+    p3.y = rand() % window.height;
+
+    if (p1.y > p2.y)   std::swap(p1, p2);
+    if (p2.y > p3.y)   std::swap(p2, p3);
+    if (p1.y > p2.y)   std::swap(p1, p2);
+
+//
+//    std::swap()
+//    line = lineDraw(triangle.v0(), triangle.v1(), line);
+//    line = lineDraw(triangle.v1(), triangle.v2(), line);
+//    line = lineDraw(triangle.v0(), triangle.v2(), line);
+
+
+
+    uint32_t colour = (rand() % 256 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
+
+    for (int i = 0; i < line.size(); ++i) {
+        CanvasPoint point = line[i];
+        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
     }
 }
 
@@ -164,6 +210,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
 		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
         else if (event.key.keysym.sym == SDLK_u) strokedTriangle(window);
+        else if (event.key.keysym.sym == SDLK_f) filledTriangle(window);
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
 		window.savePPM("output.ppm");
 		window.saveBMP("output.bmp");
