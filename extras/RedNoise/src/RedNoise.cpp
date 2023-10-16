@@ -141,9 +141,10 @@ void filledTriangle (DrawingWindow &window) {
     // line lists for each line in triangle
     std::vector<CanvasPoint> l;
     std::vector<CanvasPoint> ll;
-//    l = lineList(p0, p2, l);
-//    ll = lineList(p0, p1, ll);
-//    ll = lineList(p1, p2, ll);
+    std::vector<CanvasPoint> lll;
+    l = lineDraw(p0, p2);
+    ll = lineDraw(p0, p1);
+    lll = lineDraw(p1, p2);
 
     // generate a random colour
     uint32_t colour = (255 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
@@ -168,10 +169,10 @@ void filledTriangle (DrawingWindow &window) {
 //    }
 
     int t = 0;
-    for (float i = 0; ll[i].y <= p1.y; ++i){
+    for (int i = 0; ll[i].y <= p1.y; ++i){
         std::cout << "1-1. -- i is: " << i << std::endl;
-        std::vector<CanvasPoint> fill;
         for (int k = t; l[k].y < ll[i].y; ++k){
+            std::vector<CanvasPoint> fill;
             fill = lineDraw(l[k], ll[i]);
             for (int k = 0; k < fill.size(); ++k) {
                 CanvasPoint point = fill[k];
