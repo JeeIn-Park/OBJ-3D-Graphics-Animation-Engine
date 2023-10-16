@@ -117,8 +117,23 @@ void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colo
 
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
 
-    float numberOfSteps1 = std::max(abs(p0.x-pk.x), abs(p1.x-p0.x));
-    numberOfSteps1 = std::max(numberOfSteps1, p1.y-p0.y);
+    float xDiff_k =  pk.x - p0.x;
+    float xDiff_1 =  p1.x - p0.x;
+    float yDiff = p1.y - p0.y;
+    float numberOfSteps = std::max(abs(xDiff_k), abs(xDiff_1));
+    numberOfSteps = std::max(numberOfSteps, yDiff);
+
+    float xStepSize_k = xDiff_k/numberOfSteps;
+    float xStepSize_1 = xDiff_1/numberOfSteps;
+    float yStepSize = yDiff/numberOfSteps;
+
+    float x1, x2, y;
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        x1 = p0.x + (xStepSize_k*i);
+        x2 = p0.x + (xStepSize_1*i);
+        y = p0.y + (yStepSize*i);
+        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+    }
 
     Colour white = Colour(255, 255, 255);
     strokedTriangle(window, triangle, white);
