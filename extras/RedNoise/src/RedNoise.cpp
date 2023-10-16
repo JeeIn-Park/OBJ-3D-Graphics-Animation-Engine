@@ -70,7 +70,7 @@ CanvasTriangle randomTriangle(DrawingWindow &window){
     return triangle;
 }
 
-std::vector<CanvasPoint> line(CanvasPoint from, CanvasPoint to){
+void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
 
@@ -79,35 +79,32 @@ std::vector<CanvasPoint> line(CanvasPoint from, CanvasPoint to){
     float xStepSize = xDiff/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
 
-    std::vector<CanvasPoint> l;
+//    std::vector<CanvasPoint> l;
+//    CanvasPoint point;
+//    for (int i = 0; i < numberOfSteps; ++i ) {
+//        point.x = from.x + (xStepSize*i);
+//        point.y = from.y + (yStepSize*i);
+//        l.push_back(point);
+//    }
+//    l.push_back(to);
+//    for (int i = 0; i < l.size(); ++i) {
+//        CanvasPoint point = l[i];
+//        window.setPixelColour(point.x, point.y, colour);
+//    }
+
     CanvasPoint point;
     for (int i = 0; i < numberOfSteps; ++i ) {
         point.x = from.x + (xStepSize*i);
         point.y = from.y + (yStepSize*i);
-        l.push_back(point);
+        window.setPixelColour(point.x, point.y, colour);
     }
-    l.push_back(to);
-    return l;
 }
 
 
 void strokedTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
-    std::vector<CanvasPoint> l;
-    l = line(triangle.v0(), triangle.v1());
-    for (int i = 0; i < l.size(); ++i) {
-        CanvasPoint point = l[i];
-        window.setPixelColour(point.x, point.y, colour);
-    }
-    l = line(triangle.v1(), triangle.v2());
-    for (int i = 0; i < l.size(); ++i) {
-        CanvasPoint point = l[i];
-        window.setPixelColour(point.x, point.y, colour);
-    }
-    l = line(triangle.v0(), triangle.v2());
-    for (int i = 0; i < l.size(); ++i) {
-        CanvasPoint point = l[i];
-        window.setPixelColour(point.x, point.y, colour);
-    }
+    lineDraw(window, triangle.v0(), triangle.v1(), colour);
+    lineDraw(window, triangle.v1(), triangle.v2(), colour);
+    lineDraw(window, triangle.v0(), triangle.v2(), colour);
 }
 
 
@@ -119,6 +116,9 @@ void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colo
     if (p0.y > p1.y)   std::swap(p0, p1);
 
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
+
+    float numberOfSteps1 = std::max(abs(p0.x-pk.x), abs(p1.x-p0.x));
+    numberOfSteps1 = std::max(numberOfSteps1, p1.y-p0.y);
 
     Colour white = Colour(255, 255, 255);
     strokedTriangle(window, triangle, white);
@@ -144,50 +144,25 @@ void draw(DrawingWindow &window) {
 //		}
 //	}
 
-    // l draw
-    std::vector<CanvasPoint> l;
+    Colour white = Colour(255, 255, 255);
     // topLeft_centre
-            l = line(
+            lineDraw( window,
             CanvasPoint(0,0),
-            CanvasPoint((window.width/2), (window.height/2)));
-    for (int i = 0; i < l.size() ; ++ i){
-        CanvasPoint point = l[i];
-        // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
-    };
-
+            CanvasPoint((window.width/2), (window.height/2)), white);
     // topRight_centre
-            l = line(
-            CanvasPoint(window.width-1, 0),
+            lineDraw( window,
+              CanvasPoint(window.width-1, 0),
             // CanvasPoint(window.width-1, 0),
             // 320,0 not on visible screen area
-            CanvasPoint((window.width/2), (window.height/2)));
-    for (int i = 0; i < l.size() ; ++ i){
-        CanvasPoint point = l[i];
-        // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
-    };
-
+            CanvasPoint((window.width/2), (window.height/2)), white);
     // middle
-            l = line(
-            CanvasPoint((window.width/2), 0),
-            CanvasPoint((window.width/2),window.height-1));
-    for (int i = 0; i < l.size() ; ++ i){
-        CanvasPoint point = l[i];
-        // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
-    };
-
+            lineDraw( window,
+              CanvasPoint((window.width/2), 0),
+            CanvasPoint((window.width/2),window.height-1), white);
     // third_horizontal
-            l = line(
-            CanvasPoint((window.width/3), (window.height/2)),
-            CanvasPoint(2*(window.width/3), (window.height/2)));
-    for (int i = 0; i < l.size() ; ++ i){
-        CanvasPoint point = l[i];
-        // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
-    };
-
+            lineDraw( window,
+              CanvasPoint((window.width/3), (window.height/2)),
+            CanvasPoint(2*(window.width/3), (window.height/2)), white);
 }
 
 
