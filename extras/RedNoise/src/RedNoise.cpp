@@ -138,20 +138,7 @@ void filledTriangle (DrawingWindow &window) {
     l2 = lineList(p1, p2, l2);
 
 
-
     uint32_t colour = (255 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
-
-
-
-//    for (int i = p0.y+1; i < p1.y; ++i){
-//        std::vector<CanvasPoint> line;
-//        line = lineList(l0[i-p0.y], l1[i-p0.y], line);
-//        for (int l = 0; l < line.size(); ++l) {
-//            CanvasPoint point = line[l];
-//            window.setPixelColour(point.x, point.y, colour);
-//        }
-//    }
-// Filling the triangle
 
     int idx_l0 = 0, idx_l1 = 0, idx_l2 = 0;
     for (int y = p0.y; y <= p2.y; ++y) {
@@ -176,42 +163,8 @@ void filledTriangle (DrawingWindow &window) {
         for (int x = x_start; x <= x_end; ++x) {
             window.setPixelColour(x, y, colour);
         }
-
     }
 
-
-    int t = 0;
-    for (float i = 0; l1[i].y <= p1.y; ++i){
-        std::cout << "1-1. -- i is: " << i << std::endl;
-        std::vector<CanvasPoint> fill;
-        for (int k = t; l0[k].y < l1[i].y; ++k){
-            fill = lineList(l0[k], l1[i], fill);
-            t = k;
-        }
-        std::cout << "1. t is: " << t << std::endl;
-        for (int l = 0; l < fill.size(); ++l) {
-            CanvasPoint point = fill[l];
-            window.setPixelColour(point.x, point.y, colour);
-        }
-        std::cout << "1-2. -- i is: " << i << std::endl;
-
-    }
-
-    for (float i = 0; l2[i].y <= p2.y; ++i){
-        std::cout << "2-1. -- i is: " << i << std::endl;
-        std::vector<CanvasPoint> fill;
-        for (int k = t; l0[k].y <= l2[i].y; ++k){
-            fill = lineList(l0[k], l2[i], fill);
-            t = k;
-        }
-       std::cout << "2. t is: " << t << std::endl;
-        for (int l = 0; l < fill.size(); ++l) {
-            CanvasPoint point = fill[l];
-            window.setPixelColour(point.x, point.y, colour);
-        }
-       std::cout << "2-2. -- i is: " << i << std::endl;
-    }
-    std::cout << "finished " << std::endl;
 
     for (int i = 0; i < l0.size(); ++i) {
         CanvasPoint point = l0[i];
@@ -225,10 +178,6 @@ void filledTriangle (DrawingWindow &window) {
         CanvasPoint point = l2[i];
         window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
     }
-
-//    for (int i = (p2.y-p0.y); i < p2.y; ++i){
-//        window.setPixelColour(, (255 << 24) + (255 << 16) + (255 << 8) + 255);
-//    }
 }
 
 
