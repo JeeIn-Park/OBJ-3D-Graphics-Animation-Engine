@@ -148,17 +148,40 @@ void filledTriangle (DrawingWindow &window) {
     // generate a random colour
     uint32_t colour = (255 << 24) + (rand() % 256 << 16) + (rand() % 256 << 8) + rand() % 256;
 
-    float li = 0;
-    float lli = 0;
-    for (float i = p0.y; i <= p2.y; ++i){
-        while ((l[li].y < i)&&(li < l.size())) li++;
-        while ((ll[lli].y < i)&&(li < ll.size())) lli++;
-        std::vector<CanvasPoint> f;
-     //   f = lineList(l[li], ll[lli], f);
-        for (int k = 0; k < f.size(); ++k) {
-            CanvasPoint point = f[k];
-            window.setPixelColour(point.x, point.y, colour);
+//    int li = 0;
+//    int lli = 0;
+//    for (float i = p0.y; i <= p2.y; ++i){
+//        while ((l[li].y < i)&&(li < l.size())) li++;
+//        CanvasPoint x1;
+//        x1.x = l[li].x;
+//        x1.y = i;
+//        while ((ll[lli].y < i)&&(li < ll.size())) lli++;
+//        CanvasPoint x2;
+//        x2.x = ll[lli].x;
+//        x2.y = i;
+//        std::vector<CanvasPoint> f;
+//        f = lineDraw(l[li], ll[lli]);
+//        for (int k = 0; k < f.size(); ++k) {
+//            CanvasPoint point = f[k];
+//            window.setPixelColour(point.x, point.y, colour);
+//        }
+//    }
+
+    int t = 0;
+    for (float i = 0; ll[i].y <= p1.y; ++i){
+        std::cout << "1-1. -- i is: " << i << std::endl;
+        std::vector<CanvasPoint> fill;
+        for (int k = t; l[k].y < ll[i].y; ++k){
+            fill = lineDraw(l[k], ll[i]);
+            for (int k = 0; k < fill.size(); ++k) {
+                CanvasPoint point = fill[k];
+                window.setPixelColour(point.x, point.y, colour);
+            }
+            t = k;
         }
+        // std::cout << "1. t is: " << t << std::endl;
+        std::cout << "1-2. -- i is: " << i << std::endl;
+
     }
 
     // draw three lines with white colour
@@ -247,6 +270,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
         else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
         else if (event.key.keysym.sym == SDLK_u) strokedTriangle(window);
         else if (event.key.keysym.sym == SDLK_f) filledTriangle(window);
+        else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
         window.savePPM("output.ppm");
         window.saveBMP("output.bmp");
@@ -279,7 +303,7 @@ int main(int argc, char *argv[]) {
     while (true) {
         // We MUST poll for events - otherwise the window will freeze !
         if (window.pollForInputEvents(event)) handleEvent(event, window);
-        draw(window);
+        // draw(window);
         // Need to render the frame at the end, or nothing actually gets shown on the screen !
         window.renderFrame();
     }
