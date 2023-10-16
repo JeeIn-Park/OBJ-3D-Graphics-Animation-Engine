@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include "SDL.h"
+#include "Colour.h"
 
 class DrawingWindow {
 
@@ -24,7 +25,7 @@ public:
 	void savePPM(const std::string &filename) const;
 	void saveBMP(const std::string &filename) const;
 	bool pollForInputEvents(SDL_Event &event);
-	void setPixelColour(size_t x, size_t y, uint32_t colour);
+	void setPixelColour(size_t x, size_t y, Colour colour);
 	uint32_t getPixelColour(size_t x, size_t y);
 	void clearPixels();
 };

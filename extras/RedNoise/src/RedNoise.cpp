@@ -95,8 +95,8 @@ std::vector<CanvasPoint> line(CanvasPoint from, CanvasPoint to){
     return line;
 }
 
-Colour filledTriangle (DrawingWindow &window, CanvasTriangle triangle) {
-}
+//Colour filledTriangle (DrawingWindow &window, CanvasTriangle triangle) {
+//}
 
 void strokedTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
     std::vector<CanvasPoint> l;
@@ -146,7 +146,7 @@ void draw(DrawingWindow &window) {
     for (int i = 0; i < l.size() ; ++ i){
         CanvasPoint point = l[i];
         // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
     };
 
     // topRight_centre
@@ -158,7 +158,7 @@ void draw(DrawingWindow &window) {
     for (int i = 0; i < l.size() ; ++ i){
         CanvasPoint point = l[i];
         // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
     };
 
     // middle
@@ -168,7 +168,7 @@ void draw(DrawingWindow &window) {
     for (int i = 0; i < l.size() ; ++ i){
         CanvasPoint point = l[i];
         // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
     };
 
     // third_horizontal
@@ -178,7 +178,7 @@ void draw(DrawingWindow &window) {
     for (int i = 0; i < l.size() ; ++ i){
         CanvasPoint point = l[i];
         // uint32_t colour = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-        window.setPixelColour(point.x, point.y, (255 << 24) + (255 << 16) + (255 << 8) + 255);
+        window.setPixelColour(point.x, point.y, Colour(255, 255, 255));
     };
 
 }
