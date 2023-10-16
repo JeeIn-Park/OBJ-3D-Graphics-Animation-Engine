@@ -151,33 +151,67 @@ void filledTriangle (DrawingWindow &window) {
 //            window.setPixelColour(point.x, point.y, colour);
 //        }
 //    }
+// Filling the triangle
 
-    std::vector<CanvasPoint> fill;
+    int idx_l0 = 0, idx_l1 = 0, idx_l2 = 0;
+    for (int y = p0.y; y <= p2.y; ++y) {
+        // Find corresponding x values in l0, l1, and l2
+        while (idx_l0 < l0.size() && l0[idx_l0].y < y) idx_l0++;
+        while (idx_l1 < l1.size() && l1[idx_l1].y < y) idx_l1++;
+        while (idx_l2 < l2.size() && l2[idx_l2].y < y) idx_l2++;
+
+        int x_start, x_end;
+
+        if (y <= p1.y) {
+            // For the upper part of the triangle
+            x_start = (idx_l0 < l0.size()) ? l0[idx_l0].x : p2.x;
+            x_end = (idx_l1 < l1.size()) ? l1[idx_l1].x : p1.x;
+        } else {
+            // For the lower part of the triangle
+            x_start = (idx_l0 < l0.size()) ? l0[idx_l0].x : p2.x;
+            x_end = (idx_l2 < l2.size()) ? l2[idx_l2].x : p2.x;
+        }
+
+        // Fill the horizontal line for this y value
+        for (int x = x_start; x <= x_end; ++x) {
+            window.setPixelColour(x, y, colour);
+        }
+
+    }
+
+
     int t = 0;
     for (float i = 0; l1[i].y <= p1.y; ++i){
+        std::cout << "1-1. -- i is: " << i << std::endl;
         std::vector<CanvasPoint> fill;
-        for (int k = t; l0[k].y <= l1[i].y; ++k){
+        for (int k = t; l0[k].y < l1[i].y; ++k){
             fill = lineList(l0[k], l1[i], fill);
             t = k;
         }
+        std::cout << "1. t is: " << t << std::endl;
         for (int l = 0; l < fill.size(); ++l) {
             CanvasPoint point = fill[l];
             window.setPixelColour(point.x, point.y, colour);
         }
+        std::cout << "1-2. -- i is: " << i << std::endl;
+
     }
-//    for (float i = 0; i < p2.y-p1.y; ++i){
-//        std::vector<CanvasPoint> fill;
-//        for (float k = t; l0[k].y <= l2[i].y; ++k){
-//            fill = lineList(l0[k], l2[i], fill);
-//            t = k;
-//        }
-//        for (int l = 0; l < fill.size(); ++l) {
-//            CanvasPoint point = fill[l];
-//            window.setPixelColour(point.x, point.y, colour);
-//        }
-//    }
 
-
+    for (float i = 0; l2[i].y <= p2.y; ++i){
+        std::cout << "2-1. -- i is: " << i << std::endl;
+        std::vector<CanvasPoint> fill;
+        for (int k = t; l0[k].y <= l2[i].y; ++k){
+            fill = lineList(l0[k], l2[i], fill);
+            t = k;
+        }
+       std::cout << "2. t is: " << t << std::endl;
+        for (int l = 0; l < fill.size(); ++l) {
+            CanvasPoint point = fill[l];
+            window.setPixelColour(point.x, point.y, colour);
+        }
+       std::cout << "2-2. -- i is: " << i << std::endl;
+    }
+    std::cout << "finished " << std::endl;
 
     for (int i = 0; i < l0.size(); ++i) {
         CanvasPoint point = l0[i];
