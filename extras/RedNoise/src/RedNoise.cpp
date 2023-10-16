@@ -108,40 +108,6 @@ void strokedTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour col
 }
 
 
-void flatBottomFilledTriangle (DrawingWindow window, CanvasPoint from, CanvasPoint to1, CanvasPoint to2, Colour colour) {
-    float xDiff1 =  to1.x - from.x;
-    float xDiff2 =  to2.x - from.x;
-    float yDiff;
-    if (to1.y > from.y){
-        yDiff = to1.y - from.y;
-    } else {
-        yDiff = from.y - to1.y;
-    }
-
-    float numberOfSteps = std::max(abs(xDiff1), abs(xDiff2));
-    numberOfSteps = std::max(numberOfSteps, yDiff);
-
-    float xStepSize1 = xDiff1/numberOfSteps;
-    float xStepSize2 = xDiff2/numberOfSteps;
-    float yStepSize = yDiff/numberOfSteps;
-
-    float x1, x2, y;
-    if (to1.y > from.y){
-        for (int i = 0; i < numberOfSteps; ++i ) {
-            x1 = from.x + (xStepSize1*i);
-            x2 = from.x + (xStepSize2*i);
-            y = from.y + (yStepSize*i);
-            lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
-        }
-    } else {
-        for (int i = 0; i < numberOfSteps; ++i ) {
-            x1 = from.x + (xStepSize1*i);
-            x2 = from.x + (xStepSize2*i);
-            y = from.y - (yStepSize*i);
-            lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
-        }
-    }
-}
 void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
     // sort points
@@ -150,8 +116,43 @@ void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colo
     if (p0.y > p1.y)   std::swap(p0, p1);
 
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
-    flatBottomFilledTriangle(window, p0, p1, pk, colour);
-    flatBottomFilledTriangle(window, p2, p1, pk, colour);
+
+    float xDiff_k =  pk.x - p0.x;
+    float xDiff_1 =  p1.x - p0.x;
+    float yDiff = p1.y - p0.y;
+    float numberOfSteps = std::max(abs(xDiff_k), abs(xDiff_1));
+    numberOfSteps = std::max(numberOfSteps, yDiff);
+
+    float xStepSize_k = xDiff_k/numberOfSteps;
+    float xStepSize_1 = xDiff_1/numberOfSteps;
+    float yStepSize = yDiff/numberOfSteps;
+
+    float x1, x2, y;
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        x1 = p0.x + (xStepSize_k*i);
+        x2 = p0.x + (xStepSize_1*i);
+        y = p0.y + (yStepSize*i);
+        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+    }
+
+    lineDraw(window, p1, pk, colour);
+
+    xDiff_k =  pk.x - p2.x;
+    xDiff_1 =  p1.x - p2.x;
+    yDiff = p1.y - p2.y;
+    numberOfSteps = std::max(abs(xDiff_k), abs(xDiff_1));
+    numberOfSteps = std::max(numberOfSteps, abs(yDiff));
+
+    xStepSize_k = xDiff_k/numberOfSteps;
+    xStepSize_1 = xDiff_1/numberOfSteps;
+    yStepSize = yDiff/numberOfSteps;
+
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        x1 = p2.x + (xStepSize_k*i);
+        x2 = p2.x + (xStepSize_1*i);
+        y = p2.y + (yStepSize*i);
+        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+    }
 
     Colour white = Colour(255, 255, 255);
     strokedTriangle(window, triangle, white);
