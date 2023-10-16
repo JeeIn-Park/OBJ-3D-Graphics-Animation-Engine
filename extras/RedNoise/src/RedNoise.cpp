@@ -111,22 +111,36 @@ void strokedTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour col
 void flatBottomFilledTriangle (DrawingWindow window, CanvasPoint from, CanvasPoint to1, CanvasPoint to2, Colour colour) {
     float xDiff1 =  to1.x - from.x;
     float xDiff2 =  to2.x - from.x;
-    float yDiff = to1.y - from.y;
+    float yDiff;
+    if (to1.y > from.y){
+        yDiff = to1.y - from.y;
+    } else {
+        yDiff = from.y - to1.y;
+    }
+
     float numberOfSteps = std::max(abs(xDiff1), abs(xDiff2));
-    numberOfSteps = std::max(numberOfSteps, abs(yDiff));
+    numberOfSteps = std::max(numberOfSteps, yDiff);
 
     float xStepSize1 = xDiff1/numberOfSteps;
     float xStepSize2 = xDiff2/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
 
     float x1, x2, y;
-    for (int i = 0; i < numberOfSteps; ++i ) {
-        x1 = from.x + (xStepSize1*i);
-        x2 = from.x + (xStepSize2*i);
-        y = from.y + (yStepSize*i);
-        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+    if (to1.y > from.y){
+        for (int i = 0; i < numberOfSteps; ++i ) {
+            x1 = from.x + (xStepSize1*i);
+            x2 = from.x + (xStepSize2*i);
+            y = from.y + (yStepSize*i);
+            lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+        }
+    } else {
+        for (int i = 0; i < numberOfSteps; ++i ) {
+            x1 = from.x + (xStepSize1*i);
+            x2 = from.x + (xStepSize2*i);
+            y = from.y - (yStepSize*i);
+            lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+        }
     }
-
 }
 void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
@@ -165,23 +179,23 @@ void draw(DrawingWindow &window) {
 
     Colour white = Colour(255, 255, 255);
     // topLeft_centre
-            lineDraw( window,
-            CanvasPoint(0,0),
-            CanvasPoint((window.width/2), (window.height/2)), white);
+    lineDraw( window,
+              CanvasPoint(0,0),
+              CanvasPoint((window.width/2), (window.height/2)), white);
     // topRight_centre
-            lineDraw( window,
+    lineDraw( window,
               CanvasPoint(window.width-1, 0),
             // CanvasPoint(window.width-1, 0),
             // 320,0 not on visible screen area
-            CanvasPoint((window.width/2), (window.height/2)), white);
+              CanvasPoint((window.width/2), (window.height/2)), white);
     // middle
-            lineDraw( window,
+    lineDraw( window,
               CanvasPoint((window.width/2), 0),
-            CanvasPoint((window.width/2),window.height-1), white);
+              CanvasPoint((window.width/2),window.height-1), white);
     // third_horizontal
-            lineDraw( window,
+    lineDraw( window,
               CanvasPoint((window.width/3), (window.height/2)),
-            CanvasPoint(2*(window.width/3), (window.height/2)), white);
+              CanvasPoint(2*(window.width/3), (window.height/2)), white);
 }
 
 
