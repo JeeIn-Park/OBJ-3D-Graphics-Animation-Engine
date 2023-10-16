@@ -74,29 +74,22 @@ std::vector<CanvasPoint> line(CanvasPoint from, CanvasPoint to){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
 
-    float numberOfSteps;
-    if (abs(xDiff) > abs(yDiff)){
-        numberOfSteps = abs(xDiff);
-    } else {
-        numberOfSteps = abs(yDiff);
-    };
+    float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
 
     float xStepSize = xDiff/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
 
-    std::vector<CanvasPoint> line;
+    std::vector<CanvasPoint> l;
     CanvasPoint point;
     for (int i = 0; i < numberOfSteps; ++i ) {
         point.x = from.x + (xStepSize*i);
         point.y = from.y + (yStepSize*i);
-        line.push_back(point);
+        l.push_back(point);
     }
-    line.push_back(to);
-    return line;
+    l.push_back(to);
+    return l;
 }
 
-//Colour filledTriangle (DrawingWindow &window, CanvasTriangle triangle) {
-//}
 
 void strokedTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
     std::vector<CanvasPoint> l;
@@ -115,6 +108,20 @@ void strokedTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour col
         CanvasPoint point = l[i];
         window.setPixelColour(point.x, point.y, colour);
     }
+}
+
+
+void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
+    CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
+    // sort points
+    if (p0.y > p1.y)   std::swap(p0, p1);
+    if (p1.y > p2.y)   std::swap(p1, p2);
+    if (p0.y > p1.y)   std::swap(p0, p1);
+
+    CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
+
+    Colour white = Colour(255, 255, 255);
+    strokedTriangle(window, triangle, white);
 }
 
 
@@ -195,7 +202,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
             strokedTriangle(window, randomTriangle(window), colour);
         }
         else if (event.key.keysym.sym == SDLK_f) {
-          //  filledTriangle(window);
+            filledTriangle(window, randomTriangle(window), colour);
         }
         else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
