@@ -61,7 +61,7 @@ std::vector<std::vector<Colour>> textureLoading(const std::string &filename){
     for (int y = 0; y < textureMap.height; ++y) {
         std::vector<Colour> pixes;
         for (int x = 0; x < textureMap.width; ++x) {
-            uint8_t intColour = textureMap.pixels[y*textureMap.width + x];
+            uint32_t intColour = textureMap.pixels[y*textureMap.width + x];
             int blue = intColour & 0xFF;
             int green = (intColour >> 8) & 0xFF;
             int red = (intColour >> 16) & 0xFF;
@@ -235,14 +235,31 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
 }
 
 void draw(DrawingWindow &window) {
-    CanvasPoint v0 = CanvasPoint(160, 10);
-    CanvasPoint v1 = CanvasPoint(300, 230);
-    CanvasPoint v2 = CanvasPoint(10, 150);
-    v0.texturePoint = TexturePoint(195, 5);
-    v1.texturePoint = TexturePoint(395, 380);
-    v2.texturePoint = TexturePoint(65, 330);
-    CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
-    texturedTriangle(window, triangle, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+//    CanvasPoint v0 = CanvasPoint(160, 10);
+//    CanvasPoint v1 = CanvasPoint(300, 230);
+//    CanvasPoint v2 = CanvasPoint(10, 150);
+//    v0.texturePoint = TexturePoint(195, 5);
+//    v1.texturePoint = TexturePoint(395, 380);
+//    v2.texturePoint = TexturePoint(65, 330);
+//    CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
+//    texturedTriangle(window, triangle, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+
+
+//   uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
+    uint32_t red = (255 << 24) + (255 << 16) + (0 << 8) + 0;
+    uint32_t green = (255 << 24) + (0 << 16) + (255 << 8) + 0;
+    uint32_t blue = (255 << 24) + (0 << 16) + (0 << 8) + 255;
+    uint32_t white = (255 << 24) + (255 << 16) + (255 << 8) + 255;
+
+
+    uint32_t intColour = white;
+
+
+    Colour colour;
+    colour.blue = (intColour >> 0) & 0xFF;       // Extract blue channel (bits 0-7)
+    colour.green = (intColour >> 8) & 0xFF;     // Extract green channel (bits 8-15)
+    colour.red = (intColour >> 16) & 0xFF;     // Extract red channel (bits 16-23)
+    filledTriangle(window, randomTriangle(window), colour);
 }
 
 
