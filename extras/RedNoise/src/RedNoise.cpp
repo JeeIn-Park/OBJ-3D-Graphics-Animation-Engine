@@ -72,22 +72,6 @@ std::vector<std::vector<Colour>> textureLoading(const std::string &filename){
         }
         pixesList.push_back(pixes);
     }
-
-//    for (int i = 0; i < textureMap.pixels.size(); ++ i){
-//        int y = i/textureMap.width;
-//        int x = i - (textureMap.width * y);
-//
-//        uint8_t intColour = textureMap.pixels[i];
-//        int blue = intColour & 0xFF;
-//        int green = (intColour >> 8) & 0xFF;
-//        int red = (intColour >> 16) & 0xFF;
-//     //    (255 << 24) + (colour.red << 16) + (colour.green << 8) + colour.blue
-//        colour.blue = blue;
-//        colour.green = green;
-//        colour.red = red;
-//
-//        points[y][x] = colour;
-//    }
     return pixesList;
 }
 
@@ -251,47 +235,14 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
 }
 
 void draw(DrawingWindow &window) {
-    CanvasTriangle triangle;
-    texturedTriangle(window, triangle, "/texture.ppm");
-
-//	window.clearPixels();
-//    glm::vec3 red(255, 0, 0);
-//    glm::vec3 blue(0, 0, 255);
-//    glm::vec3 green(0, 255, 0);
-//    glm::vec3 yellow(255, 255, 0);
-
-    // gradation rainbow
-//    std::vector<glm::vec3> from_list = interpolateThreeElementValues(topLeft, bottomLeft, window.width);
-//    std::vector<glm::vec3> to_list = interpolateThreeElementValues(topRight, bottomRight, window.width);
-//    for (size_t y = 0; y < window.height; y++) {
-//        std::vector<glm::vec3> colour_gradation = interpolateThreeElementValues(  from_list[y], to_list[y], window.width);
-//		for (size_t x = 0; x < window.width; x++) {
-//            glm::vec3 point = colour_gradation[x];
-//            uint32_t colour = (255 << 24) + (int(point.x) << 16) + (int(point.y) << 8) + int(point.z);
-//			window.setPixelColour(x, y, colour);
-//		}
-//	}
-
-    // lines
-//    Colour white = Colour(255, 255, 255);
-//    // topLeft_centre
-//    lineDraw( window,
-//              CanvasPoint(0,0),
-//              CanvasPoint((window.width/2), (window.height/2)), white);
-//    // topRight_centre
-//    lineDraw( window,
-//              CanvasPoint(window.width-1, 0),
-//            // CanvasPoint(window.width-1, 0),
-//            // 320,0 not on visible screen area
-//              CanvasPoint((window.width/2), (window.height/2)), white);
-//    // middle
-//    lineDraw( window,
-//              CanvasPoint((window.width/2), 0),
-//              CanvasPoint((window.width/2),window.height-1), white);
-//    // third_horizontal
-//    lineDraw( window,
-//              CanvasPoint((window.width/3), (window.height/2)),
-//              CanvasPoint(2*(window.width/3), (window.height/2)), white);
+    CanvasPoint v0 = CanvasPoint(160, 10);
+    CanvasPoint v1 = CanvasPoint(300, 230);
+    CanvasPoint v2 = CanvasPoint(10, 150);
+    v0.texturePoint = TexturePoint(195, 5);
+    v1.texturePoint = TexturePoint(395, 380);
+    v2.texturePoint = TexturePoint(65, 330);
+    CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
+    texturedTriangle(window, triangle, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
 }
 
 
@@ -319,30 +270,9 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 int main(int argc, char *argv[]) {
     DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
     SDL_Event event;
-
-    // check interpolateSingleFloats
-//    std::vector<float> result;
-//    result = interpolateSingleFloats(2.2, 8.5, 7);
-//    for(size_t i=0; i<result.size(); i++) std::cout << result[i] << " ";
-//    std::cout << std::endl;
-
-    // check interpolateThreeElementValues
-//    std::vector<glm::vec3> result3;
-//    glm::vec3 from(1.0, 4.0, 9.2);
-//    glm::vec3 to(4.0, 1.0, 9.8);
-//    result3 = interpolateThreeElementValues(from, to, 4);
-//    for(size_t i=0; i<result.size(); i++) std::cout << result[i];
-//    std::cout << std::endl;
-    // Print the result to the command line
-//    for (const auto& vec : result3) {
-//        std::cout << "Result: (" << vec.x << ", " << vec.y << ", " << vec.z << ")" << std::endl;
-//    }
-
     while (true) {
-        // We MUST poll for events - otherwise the window will freeze !
         if (window.pollForInputEvents(event)) handleEvent(event, window);
             draw(window);
-        // Need to render the frame at the end, or nothing actually gets shown on the screen !
         window.renderFrame();
     }
 }
