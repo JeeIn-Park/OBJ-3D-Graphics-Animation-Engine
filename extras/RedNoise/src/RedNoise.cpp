@@ -56,7 +56,7 @@ void textureLoading(const std::string &filename){
     //std::vector<std::vector<Colour>> points;
     Colour points[textureMap.height][textureMap.width];
     Colour colour;
-    for (int i; i < textureMap.pixels.size(), ++ i;){
+    for (int i = 0; i < textureMap.pixels.size(); ++ i){
         int y = i/textureMap.width;
         int x = i - (textureMap.width * y);
 
