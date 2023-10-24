@@ -2,9 +2,12 @@
 #include <Utils.h>
 #include <fstream>
 #include <vector>
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <CanvasTriangle.h>
 #include <Colour.h>
+#include <TextureMap.h>
+#include <TexturePoint.h>
+
 
 #define WIDTH 320
 #define HEIGHT 240
@@ -47,6 +50,29 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     //use calculated last value as to if the gap cannot be represented by float
     return result;
 }
+
+void textureLoading(const std::string &filename){
+    TextureMap textureMap = TextureMap(filename);
+    //std::vector<std::vector<Colour>> points;
+    Colour points[textureMap.height][textureMap.width];
+    Colour colour;
+    for (int i; i < textureMap.pixels.size(), ++ i;){
+        int y = i/textureMap.width;
+        int x = i - (textureMap.width * y);
+
+        uint8_t intColour = textureMap.pixels[i];
+        int blue = intColour & 0xFF;
+        int green = (intColour >> 8) & 0xFF;
+        int red = (intColour >> 16) & 0xFF;
+     //    (255 << 24) + (colour.red << 16) + (colour.green << 8) + colour.blue
+        colour.blue = blue;
+        colour.green = green;
+        colour.red = red;
+
+        points[y][x] = colour;
+    }
+}
+
 
 CanvasTriangle randomTriangle(DrawingWindow &window){
     CanvasTriangle triangle;
