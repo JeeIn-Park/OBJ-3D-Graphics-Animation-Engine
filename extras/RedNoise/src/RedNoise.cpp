@@ -51,26 +51,44 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
-void textureLoading(const std::string &filename){
+std::vector<std::vector<Colour>> textureLoading(const std::string &filename){
     TextureMap textureMap = TextureMap(filename);
-    //std::vector<std::vector<Colour>> points;
-    Colour points[textureMap.height][textureMap.width];
+    std::vector<std::vector<Colour>> pixesList;
+
+    //Colour points[textureMap.height][textureMap.width];
     Colour colour;
-    for (int i = 0; i < textureMap.pixels.size(); ++ i){
-        int y = i/textureMap.width;
-        int x = i - (textureMap.width * y);
 
-        uint8_t intColour = textureMap.pixels[i];
-        int blue = intColour & 0xFF;
-        int green = (intColour >> 8) & 0xFF;
-        int red = (intColour >> 16) & 0xFF;
-     //    (255 << 24) + (colour.red << 16) + (colour.green << 8) + colour.blue
-        colour.blue = blue;
-        colour.green = green;
-        colour.red = red;
-
-        points[y][x] = colour;
+    for (int y = 0; y < textureMap.height; ++y) {
+        std::vector<Colour> pixes;
+        for (int x = 0; x < textureMap.width; ++x) {
+            uint8_t intColour = textureMap.pixels[y*textureMap.width + x];
+            int blue = intColour & 0xFF;
+            int green = (intColour >> 8) & 0xFF;
+            int red = (intColour >> 16) & 0xFF;
+            colour.blue = blue;
+            colour.green = green;
+            colour.red = red;
+            pixes.push_back(colour);
+        }
+        pixesList.push_back(pixes);
     }
+
+//    for (int i = 0; i < textureMap.pixels.size(); ++ i){
+//        int y = i/textureMap.width;
+//        int x = i - (textureMap.width * y);
+//
+//        uint8_t intColour = textureMap.pixels[i];
+//        int blue = intColour & 0xFF;
+//        int green = (intColour >> 8) & 0xFF;
+//        int red = (intColour >> 16) & 0xFF;
+//     //    (255 << 24) + (colour.red << 16) + (colour.green << 8) + colour.blue
+//        colour.blue = blue;
+//        colour.green = green;
+//        colour.red = red;
+//
+//        points[y][x] = colour;
+//    }
+    return pixesList;
 }
 
 
@@ -185,7 +203,60 @@ void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colo
 }
 
 
+void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle){
+    CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
+    // sort points
+    if (p0.y > p1.y)   std::swap(p0, p1);
+    if (p1.y > p2.y)   std::swap(p1, p2);
+    if (p0.y > p1.y)   std::swap(p0, p1);
+
+    CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
+
+    float xDiff_k =  pk.x - p0.x;
+    float xDiff_1 =  p1.x - p0.x;
+    float yDiff = p1.y - p0.y;
+    float numberOfSteps = std::max(abs(xDiff_k), abs(xDiff_1));
+    numberOfSteps = std::max(numberOfSteps, yDiff);
+
+    float xStepSize_k = xDiff_k/numberOfSteps;
+    float xStepSize_1 = xDiff_1/numberOfSteps;
+    float yStepSize = yDiff/numberOfSteps;
+
+    float x1, x2, y;
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        x1 = p0.x + (xStepSize_k*i);
+        x2 = p0.x + (xStepSize_1*i);
+        y = p0.y + (yStepSize*i);
+        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+    }
+
+    lineDraw(window, p1, pk, colour);
+
+    xDiff_k =  pk.x - p2.x;
+    xDiff_1 =  p1.x - p2.x;
+    yDiff = p1.y - p2.y;
+    numberOfSteps = std::max(abs(xDiff_k), abs(xDiff_1));
+    numberOfSteps = std::max(numberOfSteps, abs(yDiff));
+
+    xStepSize_k = xDiff_k/numberOfSteps;
+    xStepSize_1 = xDiff_1/numberOfSteps;
+    yStepSize = yDiff/numberOfSteps;
+
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        x1 = p2.x + (xStepSize_k*i);
+        x2 = p2.x + (xStepSize_1*i);
+        y = p2.y + (yStepSize*i);
+        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+    }
+
+    Colour white = Colour(255, 255, 255);
+    strokedTriangle(window, triangle, white);
+}
+
 void draw(DrawingWindow &window) {
+    CanvasTriangle triangle;
+    texturedTriangle(window, triangle);
+
 //	window.clearPixels();
 //    glm::vec3 red(255, 0, 0);
 //    glm::vec3 blue(0, 0, 255);
@@ -204,25 +275,26 @@ void draw(DrawingWindow &window) {
 //		}
 //	}
 
-    Colour white = Colour(255, 255, 255);
-    // topLeft_centre
-    lineDraw( window,
-              CanvasPoint(0,0),
-              CanvasPoint((window.width/2), (window.height/2)), white);
-    // topRight_centre
-    lineDraw( window,
-              CanvasPoint(window.width-1, 0),
-            // CanvasPoint(window.width-1, 0),
-            // 320,0 not on visible screen area
-              CanvasPoint((window.width/2), (window.height/2)), white);
-    // middle
-    lineDraw( window,
-              CanvasPoint((window.width/2), 0),
-              CanvasPoint((window.width/2),window.height-1), white);
-    // third_horizontal
-    lineDraw( window,
-              CanvasPoint((window.width/3), (window.height/2)),
-              CanvasPoint(2*(window.width/3), (window.height/2)), white);
+    // lines
+//    Colour white = Colour(255, 255, 255);
+//    // topLeft_centre
+//    lineDraw( window,
+//              CanvasPoint(0,0),
+//              CanvasPoint((window.width/2), (window.height/2)), white);
+//    // topRight_centre
+//    lineDraw( window,
+//              CanvasPoint(window.width-1, 0),
+//            // CanvasPoint(window.width-1, 0),
+//            // 320,0 not on visible screen area
+//              CanvasPoint((window.width/2), (window.height/2)), white);
+//    // middle
+//    lineDraw( window,
+//              CanvasPoint((window.width/2), 0),
+//              CanvasPoint((window.width/2),window.height-1), white);
+//    // third_horizontal
+//    lineDraw( window,
+//              CanvasPoint((window.width/3), (window.height/2)),
+//              CanvasPoint(2*(window.width/3), (window.height/2)), white);
 }
 
 
@@ -272,7 +344,7 @@ int main(int argc, char *argv[]) {
     while (true) {
         // We MUST poll for events - otherwise the window will freeze !
         if (window.pollForInputEvents(event)) handleEvent(event, window);
-        // draw(window);
+            draw(window);
         // Need to render the frame at the end, or nothing actually gets shown on the screen !
         window.renderFrame();
     }
