@@ -118,13 +118,13 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
 void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, std::vector<std::vector<Colour>> texture){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
-    float t_xDiff = to.texturePoint.x - from.texturePoint.x;
-    float t_yDiff = to.texturePoint.y - from.texturePoint.y;
 
-    float numberOfSteps = std::max(std::max(abs(xDiff), abs(yDiff)), std::max(abs(t_xDiff), abs(t_yDiff)));
+    float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
 
     float xStepSize = xDiff/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float t_xDiff = to.texturePoint.x - from.texturePoint.x;
+    float t_yDiff = to.texturePoint.y - from.texturePoint.y;
     float t_xStepSize = t_xDiff/numberOfSteps;
     float t_yStepSize = t_yDiff/numberOfSteps;
 
@@ -228,11 +228,16 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
     if (p1.y > p2.y)   std::swap(p1, p2);
     if (p0.y > p1.y)   std::swap(p0, p1);
 
+    TexturePoint tp0 = p0.texturePoint, tp1 = p1.texturePoint, tp2 = p2.texturePoint;
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
-    pk.texturePoint = TexturePoint(((p1.texturePoint.y-p0.texturePoint.y)*p2.texturePoint.x + (p2.texturePoint.y-p1.texturePoint.y)*p0.texturePoint.x)/(p2.texturePoint.y-p0.texturePoint.y),p1.texturePoint.y);
+    float t = (pk.x - p0.x) / (p2.x - p0.x);
+    pk.texturePoint.x = tp0.x + t * (tp2.x - tp0.x);
+    pk.texturePoint.y = tp0.y + t * (tp2.y - tp0.y);
+
 
     flatTriangleTexture(window, p0, pk, p1, texture);
-    // TODO : bottom triangle
+    textureDraw(window, p1, pk, texture);
+    flatTriangleTexture(window, p2, pk, p1, texture);
     Colour white = Colour(255, 255, 255);
     strokedTriangle(window, triangle, white);
 }
@@ -244,8 +249,7 @@ void draw(DrawingWindow &window) {
     v0.texturePoint = TexturePoint(195, 5);
     v1.texturePoint = TexturePoint(395, 380);
     v2.texturePoint = TexturePoint(65, 330);
-    CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
-    texturedTriangle(window, triangle, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+    texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
 
 
 //    uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
