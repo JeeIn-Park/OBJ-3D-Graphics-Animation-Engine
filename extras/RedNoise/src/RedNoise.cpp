@@ -105,16 +105,6 @@ void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, Textu
     float t_yStepSize = t_yDiff/numberOfSteps;
 
     uint32_t intColour;
-    CanvasPoint point;
-
-//    Colour textureColourPicker(CanvasPoint point, TextureMap texture){
-//        uint32_t intColour = texture.pixels[(texture.width*(point.y)) + point.x];
-//        int blue = intColour & 0xFF;
-//        int green = (intColour >> 8) & 0xFF;
-//        int red = (intColour >> 16) & 0xFF;
-//        return Colour(red, green, blue);
-//    }
-
     for (int i = 0; i < numberOfSteps; ++i ) {
         intColour = texture.pixels[int(from.texturePoint.x + (t_xStepSize*i)) +
                 int(from.texturePoint.y + (t_yStepSize*i)) * texture.width];
