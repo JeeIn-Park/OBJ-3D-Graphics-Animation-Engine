@@ -179,23 +179,23 @@ void flatTriangleTexture (DrawingWindow &window, CanvasPoint top, CanvasPoint bo
     float t_xDiff_1 = bot1.texturePoint.x - top.texturePoint.x;
     float t_xDiff_2 = bot2.texturePoint.x - top.texturePoint.x;
     float t_yDiff = bot1.texturePoint.y - top.texturePoint.y;
-    numberOfSteps = std::max(std::max(abs(t_xDiff_1), abs(t_xDiff_2)), std::max(abs(t_yDiff), numberOfSteps));
 
-    float t_xStepSize_1 = xDiff_1/numberOfSteps;
-    float t_xStepSize_2 = xDiff_2/numberOfSteps;
-    float t_yStepSize = yDiff/numberOfSteps;
+    float t_xStepSize_1 = t_xDiff_1/numberOfSteps;
+    float t_xStepSize_2 = t_xDiff_2/numberOfSteps;
+    float t_yStepSize = t_yDiff/numberOfSteps;
 
-    CanvasPoint from;
-    CanvasPoint to;
+
+    CanvasPoint from, to;
+
     for (int i = 0; i < numberOfSteps; ++i ) {
         from.x = top.x + (xStepSize_1*i);
         to.x = top.x + (xStepSize_2*i);
         from.y = top.y + (yStepSize*i);
-        to.y = top.y + (yStepSize*i);
-        from.texturePoint.x = top.x + (t_xStepSize_1*i);
-        to.texturePoint.x = top.x + (t_xStepSize_2*i);
-        from.texturePoint.y = top.y + (t_yStepSize*i);
-        to.texturePoint.y = top.y + (t_yStepSize*i);
+        to.y = from.y;
+        from.texturePoint.x = top.texturePoint.x + (t_xStepSize_1*i);
+        to.texturePoint.x = top.texturePoint.x + (t_xStepSize_2*i);
+        from.texturePoint.y = top.texturePoint.y + (t_yStepSize*i);
+        to.texturePoint.y = from.texturePoint.y ;
 
         textureDraw(window, from, to, texture);
     }
@@ -232,6 +232,7 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
     pk.texturePoint = TexturePoint(((p1.texturePoint.y-p0.texturePoint.y)*p2.texturePoint.x + (p2.texturePoint.y-p1.texturePoint.y)*p0.texturePoint.x)/(p2.texturePoint.y-p0.texturePoint.y),p1.texturePoint.y);
 
     flatTriangleTexture(window, p0, pk, p1, texture);
+    // TODO : bottom triangle
     Colour white = Colour(255, 255, 255);
     strokedTriangle(window, triangle, white);
 }
