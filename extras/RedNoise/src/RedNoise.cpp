@@ -51,30 +51,6 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
-std::vector<std::vector<Colour>> textureLoading(const std::string &filename){
-    TextureMap textureMap = TextureMap(filename);
-    std::vector<std::vector<Colour>> pixesList;
-
-    //Colour points[textureMap.height][textureMap.width];
-    Colour colour;
-
-    for (int y = 0; y < textureMap.height; ++y) {
-        std::vector<Colour> pixes;
-        for (int x = 0; x < textureMap.width; ++x) {
-            uint32_t intColour = textureMap.pixels[y*textureMap.width + x];
-            int blue = intColour & 0xFF;
-            int green = (intColour >> 8) & 0xFF;
-            int red = (intColour >> 16) & 0xFF;
-            colour.blue = blue;
-            colour.green = green;
-            colour.red = red;
-            pixes.push_back(colour);
-        }
-        pixesList.push_back(pixes);
-    }
-    return pixesList;
-}
-
 
 CanvasTriangle randomTriangle(DrawingWindow &window){
     CanvasTriangle triangle;
@@ -115,7 +91,7 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
     }
 }
 
-void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, std::vector<std::vector<Colour>> texture){
+void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, TextureMap texture){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
 
@@ -128,13 +104,22 @@ void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, std::
     float t_xStepSize = t_xDiff/numberOfSteps;
     float t_yStepSize = t_yDiff/numberOfSteps;
 
+    uint32_t intColour;
     CanvasPoint point;
-    Colour colour;
+
+//    Colour textureColourPicker(CanvasPoint point, TextureMap texture){
+//        uint32_t intColour = texture.pixels[(texture.width*(point.y)) + point.x];
+//        int blue = intColour & 0xFF;
+//        int green = (intColour >> 8) & 0xFF;
+//        int red = (intColour >> 16) & 0xFF;
+//        return Colour(red, green, blue);
+//    }
+
     for (int i = 0; i < numberOfSteps; ++i ) {
-        point.x = from.x + (xStepSize*i);
-        point.y = from.y + (yStepSize*i);
-        colour = texture[from.texturePoint.x + (t_xStepSize*i)][from.texturePoint.y + (t_yStepSize*i)];
-        window.setPixelColour(point.x, point.y, colour);
+        intColour = texture.pixels[int(from.texturePoint.x + (t_xStepSize*i)) +
+                int(from.texturePoint.y + (t_yStepSize*i)) * texture.width];
+        window.setPixelColour(from.x + (xStepSize*i), from.y + (yStepSize*i),
+                              Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF));
     }
 }
 
@@ -164,7 +149,7 @@ void flatTriangleFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1,
 }
 
 void flatTriangleTexture (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2,
-                          std::vector<std::vector<Colour>> texture){
+                          TextureMap texture){
     // triangle value
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
@@ -221,7 +206,7 @@ void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colo
 
 
 void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std::string &filename){
-    std::vector<std::vector<Colour>> texture = textureLoading(filename);
+    TextureMap texture = TextureMap(filename);
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
     // sort points
     if (p0.y > p1.y)   std::swap(p0, p1);
