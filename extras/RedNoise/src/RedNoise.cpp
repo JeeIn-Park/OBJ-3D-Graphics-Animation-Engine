@@ -228,7 +228,7 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
     if (p1.y > p2.y)   std::swap(p1, p2);
     if (p0.y > p1.y)   std::swap(p0, p1);
 
-    TexturePoint tp0 = p0.texturePoint, tp1 = p1.texturePoint, tp2 = p2.texturePoint;
+    TexturePoint tp0 = p0.texturePoint, tp2 = p2.texturePoint;
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
     float t = (pk.x - p0.x) / (p2.x - p0.x);
     pk.texturePoint.x = tp0.x + t * (tp2.x - tp0.x);
