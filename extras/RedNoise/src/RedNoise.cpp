@@ -120,20 +120,20 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
 CanvasTriangle randomTriangle(DrawingWindow &window){
     CanvasTriangle triangle;
 
-    triangle.v0().x = rand() % window.width;
-    triangle.v0().y = rand() % window.height;
-    triangle.v1().x = rand() % window.width;
-    triangle.v1().y = rand() % window.height;
+    triangle.v0().x = rand() % WIDTH;
+    triangle.v0().y = rand() % HEIGHT;
+    triangle.v1().x = rand() % WIDTH;
+    triangle.v1().y = rand() % HEIGHT;
     while ((triangle.v0().x == triangle.v1().x) && ((triangle.v0().y == triangle.v1().y))) {
-        triangle.v1().x = rand() % window.width;
-        triangle.v1().y = rand() % window.height;
+        triangle.v1().x = rand() % WIDTH;
+        triangle.v1().y = rand() % HEIGHT;
     }
-    triangle.v2().x = rand() % window.width;
-    triangle.v2().y = rand() % window.height;
+    triangle.v2().x = rand() % WIDTH;
+    triangle.v2().y = rand() % HEIGHT;
     while (((triangle.v0().x == triangle.v2().x) && ((triangle.v0().y == triangle.v2().y)))
            || ((triangle.v1().x == triangle.v2().x) && ((triangle.v1().y == triangle.v2().y)))) {
-        triangle.v2().x = rand() % window.width;
-        triangle.v2().y = rand() % window.height;
+        triangle.v2().x = rand() % WIDTH;
+        triangle.v2().y = rand() % HEIGHT;
     }
 
     return triangle;
