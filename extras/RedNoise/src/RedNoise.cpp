@@ -51,51 +51,69 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
-ModelTriangle readOBJ(const std::string &filename){
+void drawModel (DrawingWindow &window, ModelTriangle triangle){
+
+}
+
+Colour stringToColour () {
+
+}
+
+void readOBJ(DrawingWindow &window, const std::string &filename){
+    std::vector<glm::vec3> vertices;
+    ModelTriangle triangle;
+    int index = 1;
+
     std::string line;
     std::ifstream Read(filename);
     while (getline(Read, line)){
 
-        std::string word;
         if (line[0] == 'o'){
-            //std::cout << line;
-            //line[2]
-            //for (char c : line) {}
             for (int i = 2; i < line.size(); ++i) {
-                std::cout << line[i];
+                //std::cout << line[i];
             }
             std::cout << std::endl;
-        }
-
-        for (char c : line) {
-            if (c == 'o') {
-
+        } else if (line[0] == 'u') {
+            std::string colour;
+            for (int i = 2; i < line.size(); ++i) {
+                colour += line[i];
             }
-            if (std::isspace(c)) {
-                if (!word.empty()) {
-                    //words.push_back(word);
-                    word.clear();
-                }
-            } else {
-                word += c;
+            Colour c = stringToColour();
+            triangle.colour = std::move(c);
+        } else if (line[0] == 'v') {
+            std::string coordinate;
+            glm::vec3 point;
+            int i = 7;
+            while (std::isspace(line[i])) {
+                coordinate += line[i];
+                ++ i;
             }
+            point.x = std::stof(coordinate);
+            ++ i;
+            while (std::isspace(line[i])) {
+                coordinate += line[i];
+                ++ i;
+            }
+            point.y = std::stof(coordinate);
+            ++ i;
+            while (std::isspace(line[i])) {
+                coordinate += line[i];
+                ++ i;
+            }
+            point.z = std::stof(coordinate);
+            vertices.push_back(point);
+        } else if (line[0] == 'f') {
+            std::array<glm::vec3, 3> v;
+            v[0] = vertices[static_cast<int>(line[2]) - index];
+            v[1] = vertices[static_cast<int>(line[5]) - index];
+            v[2] = vertices[static_cast<int>(line[8]) - index];
+            triangle.vertices = v;
+            // draw a triangle
+        } else {
+            vertices.clear();
         }
-        if (!word.empty()){
-            //words.push_back(word);
-        }
-
-        //std::cout << line;
-
-
     }
-
-    ModelTriangle triangle;
-
-
-    filename;
-
     Read.close();
-    return triangle;
 }
 
 
@@ -273,7 +291,7 @@ void draw(DrawingWindow &window) {
 //    v2.texturePoint = TexturePoint(65, 330);
 //    texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
 
-    readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
+    readOBJ(window, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
 
 //    uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
 //    uint32_t red = (255 << 24) + (255 << 16) + (0 << 8) + 0;
