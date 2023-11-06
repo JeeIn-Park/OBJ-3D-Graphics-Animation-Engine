@@ -283,13 +283,13 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
 }
 
 void draw(DrawingWindow &window) {
-//    CanvasPoint v0 = CanvasPoint(160, 10);
-//    CanvasPoint v1 = CanvasPoint(300, 230);
-//    CanvasPoint v2 = CanvasPoint(10, 150);
-//    v0.texturePoint = TexturePoint(195, 5);
-//    v1.texturePoint = TexturePoint(395, 380);
-//    v2.texturePoint = TexturePoint(65, 330);
-//    texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+    CanvasPoint v0 = CanvasPoint(160, 10);
+    CanvasPoint v1 = CanvasPoint(300, 230);
+    CanvasPoint v2 = CanvasPoint(10, 150);
+    v0.texturePoint = TexturePoint(195, 5);
+    v1.texturePoint = TexturePoint(395, 380);
+    v2.texturePoint = TexturePoint(65, 330);
+    texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
 
     readOBJ(window, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
 
