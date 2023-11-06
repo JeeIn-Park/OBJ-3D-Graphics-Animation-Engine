@@ -104,11 +104,12 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
             vertices.push_back(point);
         } else if (line[0] == 'f') {
             std::array<glm::vec3, 3> v;
+            // TODO : this needs to deal with longer integers
             v[0] = vertices[static_cast<int>(line[2]) - index];
             v[1] = vertices[static_cast<int>(line[5]) - index];
             v[2] = vertices[static_cast<int>(line[8]) - index];
             triangle.vertices = v;
-            // draw a triangle
+            // TODO: draw a triangle
         } else {
             vertices.clear();
         }
