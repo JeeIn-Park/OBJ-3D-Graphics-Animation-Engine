@@ -55,7 +55,38 @@ ModelTriangle readOBJ(const std::string &filename){
     std::string line;
     std::ifstream Read(filename);
     while (getline(Read, line)){
-        std::cout << line;
+
+        std::string word;
+        if (line[0] == 'o'){
+            //std::cout << line;
+            //line[2]
+            //for (char c : line) {}
+            for (int i = 2; i < line.size(); ++i) {
+                std::cout << line[i];
+            }
+            std::cout << std::endl;
+        }
+
+        for (char c : line) {
+            if (c == 'o') {
+
+            }
+            if (std::isspace(c)) {
+                if (!word.empty()) {
+                    //words.push_back(word);
+                    word.clear();
+                }
+            } else {
+                word += c;
+            }
+        }
+        if (!word.empty()){
+            //words.push_back(word);
+        }
+
+        //std::cout << line;
+
+
     }
 
     ModelTriangle triangle;
