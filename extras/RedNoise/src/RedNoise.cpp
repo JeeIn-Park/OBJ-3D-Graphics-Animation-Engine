@@ -7,7 +7,7 @@
 #include <Colour.h>
 #include <TextureMap.h>
 #include <TexturePoint.h>
-
+#include <ModelTriangle.h>
 
 #define WIDTH 320
 #define HEIGHT 240
@@ -49,6 +49,22 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
 
     //use calculated last value as to if the gap cannot be represented by float
     return result;
+}
+
+ModelTriangle readOBJ(const std::string &filename){
+    std::string line;
+    std::ifstream Read(filename);
+    while (getline(Read, line)){
+        std::cout << line;
+    }
+
+    ModelTriangle triangle;
+
+
+    filename;
+
+    Read.close();
+    return triangle;
 }
 
 
@@ -218,14 +234,15 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
 }
 
 void draw(DrawingWindow &window) {
-    CanvasPoint v0 = CanvasPoint(160, 10);
-    CanvasPoint v1 = CanvasPoint(300, 230);
-    CanvasPoint v2 = CanvasPoint(10, 150);
-    v0.texturePoint = TexturePoint(195, 5);
-    v1.texturePoint = TexturePoint(395, 380);
-    v2.texturePoint = TexturePoint(65, 330);
-    texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+//    CanvasPoint v0 = CanvasPoint(160, 10);
+//    CanvasPoint v1 = CanvasPoint(300, 230);
+//    CanvasPoint v2 = CanvasPoint(10, 150);
+//    v0.texturePoint = TexturePoint(195, 5);
+//    v1.texturePoint = TexturePoint(395, 380);
+//    v2.texturePoint = TexturePoint(65, 330);
+//    texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
 
+    readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
 
 //    uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
 //    uint32_t red = (255 << 24) + (255 << 16) + (0 << 8) + 0;
