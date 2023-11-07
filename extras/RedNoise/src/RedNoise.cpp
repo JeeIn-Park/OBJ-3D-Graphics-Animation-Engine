@@ -9,8 +9,13 @@
 #include <TexturePoint.h>
 #include <ModelTriangle.h>
 
+// TODO : check if it's allowed to use this library
+#include <unordered_map>
+
 #define WIDTH 320
 #define HEIGHT 240
+
+std::unordered_map<std::string, Colour> colorMap;
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     std::vector<float> result;
@@ -51,12 +56,28 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
+void readMTL (const std::string &filename) {
+
+    std::string line;
+    std::ifstream Read(filename);
+    while (getline(Read, line)) {
+        if (line[0] == 'n'){
+            std::string colourName;
+            for (int i = 7; i < static_cast<int>(line.length()); ++i) {
+               colourName += line[i];
+            }
+
+        }
+    }
+}
+
 void drawModel (DrawingWindow &window, ModelTriangle triangle){
 
 }
 
 Colour stringToColour () {
-
+    Colour colour;
+    return colour;
 }
 
 void readOBJ(DrawingWindow &window, const std::string &filename){
@@ -70,7 +91,7 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
 
             // o - object
         if (line[0] == 'o'){
-            for (int i = 2; i < line.size(); ++i) {
+            for (int i = 2; i < static_cast<int>(line.length()); ++i) {
                 //std::cout << line[i];
             }
             std::cout << std::endl;
@@ -78,7 +99,7 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
             // usemtl = mtl colour
         } else if (line[0] == 'u') {
             std::string colour;
-            for (int i = 2; i < line.size(); ++i) {
+            for (int i = 2; i < static_cast<int>(line.length()); ++i) {
                 colour += line[i];
             }
             Colour c = stringToColour();
@@ -113,7 +134,7 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
             std::array<glm::vec3, 3> v;
             std::string index;
             int vi = 0;
-            for (int i = 2; i < line.size(); ++i) {
+            for (int i = 2; i < static_cast<int>(line.length()); ++i) {
                 if (!std::isspace(line[i])) {
                     if (line[i] != '/') {
                         index += line[i];
@@ -123,7 +144,6 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
                         ++ vi;
                     }
                 }
-
             }
             triangle.vertices = v;
             drawModel(window, triangle);
