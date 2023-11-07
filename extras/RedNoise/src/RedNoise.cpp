@@ -101,10 +101,6 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     return colourMap;
 }
 
-void drawModel (DrawingWindow &window, ModelTriangle triangle){
-
-}
-
 std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap){
     std::vector<ModelTriangle> triangles;
     std::vector<glm::vec3> vertices;
@@ -171,26 +167,28 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 }
 
 
-CanvasTriangle randomTriangle(){
+CanvasTriangle randomTriangle() {
     CanvasTriangle triangle;
 
-    triangle.v0().x = rand() % WIDTH;
-    triangle.v0().y = rand() % HEIGHT;
-    triangle.v1().x = rand() % WIDTH;
-    triangle.v1().y = rand() % HEIGHT;
-    while ((triangle.v0().x == triangle.v1().x) && ((triangle.v0().y == triangle.v1().y))) {
+    while (true) {
+        triangle.v0().x = rand() % WIDTH;
+        triangle.v0().y = rand() % HEIGHT;
+
         triangle.v1().x = rand() % WIDTH;
         triangle.v1().y = rand() % HEIGHT;
-    }
-    triangle.v2().x = rand() % WIDTH;
-    triangle.v2().y = rand() % HEIGHT;
-    while (((triangle.v0().x == triangle.v2().x) && ((triangle.v0().y == triangle.v2().y)))
-           || ((triangle.v1().x == triangle.v2().x) && ((triangle.v1().y == triangle.v2().y)))) {
+
         triangle.v2().x = rand() % WIDTH;
         triangle.v2().y = rand() % HEIGHT;
-    }
 
-    return triangle;
+        // Calculate the cross product of vectors (v0, v1) and (v0, v2)
+        int crossProduct = (triangle.v1().x - triangle.v0().x) * (triangle.v2().y - triangle.v0().y) -
+                           (triangle.v1().y - triangle.v0().y) * (triangle.v2().x - triangle.v0().x);
+
+        // Check if the cross product is non-zero (not collinear)
+        if (crossProduct != 0) {
+            return triangle;
+        }
+    }
 }
 
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour){
@@ -232,13 +230,18 @@ void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, Textu
     }
 }
 
-void strokedTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
+void modelDraw (DrawingWindow &window, ModelTriangle triangle){
+
+}
+
+
+void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
     lineDraw(window, triangle.v0(), triangle.v1(), colour);
     lineDraw(window, triangle.v1(), triangle.v2(), colour);
     lineDraw(window, triangle.v0(), triangle.v2(), colour);
 }
 
-void flatTriangleFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour){
+void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour){
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
     float yDiff = bot1.y - top.y;
@@ -257,8 +260,8 @@ void flatTriangleFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1,
     }
 }
 
-void flatTriangleTexture (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2,
-                          TextureMap texture){
+void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2,
+                              TextureMap texture){
     // triangle value
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
@@ -305,12 +308,12 @@ void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colo
 
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
 
-    flatTriangleFill(window, p0, pk, p1, colour);
+    flatTriangleColourFill(window, p0, pk, p1, colour);
     lineDraw(window, p1, pk, colour);
-    flatTriangleFill(window, p2, pk, p1, colour);
+    flatTriangleColourFill(window, p2, pk, p1, colour);
 
     Colour white = Colour(255, 255, 255);
-    strokedTriangle(window, triangle, white);
+    strokedTriangleDraw(window, triangle, white);
 }
 
 
@@ -329,17 +332,12 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
     pk.texturePoint.y = tp0.y + t * (tp2.y - tp0.y);
 
 
-    flatTriangleTexture(window, p0, pk, p1, texture);
+    flatTriangleTextureFill(window, p0, pk, p1, texture);
     textureDraw(window, p1, pk, texture);
-    flatTriangleTexture(window, p2, pk, p1, texture);
+    flatTriangleTextureFill(window, p2, pk, p1, texture);
     Colour white = Colour(255, 255, 255);
-    strokedTriangle(window, triangle, white);
+    strokedTriangleDraw(window, triangle, white);
 }
-
-void draw(DrawingWindow &window) {
-    // readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
-}
-
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
@@ -348,13 +346,16 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
         else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
         else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
         else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
+        else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
+
         else if (event.key.keysym.sym == SDLK_u) {
-            strokedTriangle(window, randomTriangle(), colour);
+            strokedTriangleDraw(window, randomTriangle(), colour);
         }
+
         else if (event.key.keysym.sym == SDLK_f) {
             filledTriangle(window, randomTriangle(), colour);
         }
-        else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
+
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
         window.savePPM("output.ppm");
         window.saveBMP("output.bmp");
@@ -365,9 +366,13 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 int main(int argc, char *argv[]) {
     DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
     SDL_Event event;
+
+    std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
+    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl);
+
     while (true) {
         if (window.pollForInputEvents(event)) handleEvent(event, window);
-            draw(window);
+
         window.renderFrame();
     }
 }
