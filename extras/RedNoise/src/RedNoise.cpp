@@ -16,8 +16,6 @@
 #define WIDTH 320
 #define HEIGHT 240
 
-std::unordered_map<std::string, Colour> colorMap;
-
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     std::vector<float> result;
     result.push_back(from);
@@ -57,19 +55,50 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
-void readMTL (const std::string &filename) {
+std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
+    std::unordered_map<std::string, Colour> colourMap;
 
     std::string line;
-    std::ifstream Read(filename);
-    while (getline(Read, line)) {
-        if (line[0] == 'n'){
-            std::string colourName;
-            for (int i = 7; i < static_cast<int>(line.length()); ++i) {
-               colourName += line[i];
+    std::ifstream mtlFile(filename);
+
+    // handle error : when file is not opened
+    if (!mtlFile.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return colourMap;
+    }
+
+    while (getline(mtlFile, line)) {
+        std::string colourName;
+
+        std::istringstream iss(line);
+        std::string token;
+        iss >> token;
+
+        // newmtl - new colour
+        if (token == "newmtl") {
+            iss >> colourName;
+        }
+
+        // Kd - RGB value
+        if (token == "Kd") {
+            std::string value;
+            std::array<int, 3> rgb;
+
+            for (int i = 0; i < 3; ++i) {
+                iss >> value;
+                rgb[i] = std::stoi(value) * 255;
+            }
+
+            if (rgb[0] >= 0 && rgb[1] >= 0 && rgb[2] >= 0) {
+                colourMap[colourName] = Colour(rgb[0], rgb[1], rgb[2]);
             }
 
         }
+
     }
+
+    mtlFile.close();
+    return colourMap;
 }
 
 void drawModel (DrawingWindow &window, ModelTriangle triangle){
@@ -102,8 +131,8 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename){
         iss >> token;
 
 
-        // u - usemtl (colour)
-        if (token == "u") {
+        // usemtl - colour
+        if (token == "usemtl") {
             std::string colourName;
             iss >> colourName;
             //TODO : use hashmap to find colour
