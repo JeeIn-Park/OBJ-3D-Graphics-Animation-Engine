@@ -105,13 +105,7 @@ void drawModel (DrawingWindow &window, ModelTriangle triangle){
 
 }
 
-Colour stringToColour (std::string colourName) {
-    // TODO : use hashmap instead of adding function which deal with colour
-    Colour colour;
-    return colour;
-}
-
-std::vector<ModelTriangle> readOBJ(const std::string &filename){
+std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap){
     std::vector<ModelTriangle> triangles;
     std::vector<glm::vec3> vertices;
     Colour currentColour;
@@ -135,8 +129,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename){
         if (token == "usemtl") {
             std::string colourName;
             iss >> colourName;
-            //TODO : use hashmap to find colour
-            currentColour = stringToColour(colourName);
+            currentColour = colourMap[colourName];
         }
 
         // v - vertex
@@ -344,22 +337,7 @@ void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std:
 }
 
 void draw(DrawingWindow &window) {
-    CanvasPoint v0 = CanvasPoint(160, 10);
-    CanvasPoint v1 = CanvasPoint(300, 230);
-    CanvasPoint v2 = CanvasPoint(10, 150);
-    v0.texturePoint = TexturePoint(195, 5);
-    v1.texturePoint = TexturePoint(395, 380);
-    v2.texturePoint = TexturePoint(65, 330);
-    texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
-
-    readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
-
-//    uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
-//    uint32_t red = (255 << 24) + (255 << 16) + (0 << 8) + 0;
-//    uint32_t green = (255 << 24) + (0 << 16) + (255 << 8) + 0;
-//    uint32_t blue = (255 << 24) + (0 << 16) + (0 << 8) + 255;
-//    uint32_t white = (255 << 24) + (255 << 16) + (255 << 8) + 255;
-
+    // readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
 }
 
 
