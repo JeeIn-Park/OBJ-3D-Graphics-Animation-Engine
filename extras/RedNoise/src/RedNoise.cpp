@@ -11,6 +11,7 @@
 
 // TODO : check if it's allowed to use this library
 #include <unordered_map>
+#include <sstream>
 
 #define WIDTH 320
 #define HEIGHT 240
@@ -75,85 +76,80 @@ void drawModel (DrawingWindow &window, ModelTriangle triangle){
 
 }
 
-Colour stringToColour () {
+Colour stringToColour (std::string colourName) {
+    // TODO : use hashmap instead of adding function which deal with colour
     Colour colour;
     return colour;
 }
 
-void readOBJ(DrawingWindow &window, const std::string &filename){
+std::vector<ModelTriangle> readOBJ(const std::string &filename){
+    std::vector<ModelTriangle> triangles;
     std::vector<glm::vec3> vertices;
-    ModelTriangle triangle;
-    // int index = 1;
+    Colour currentColour;
 
     std::string line;
-    std::ifstream Read(filename);
-    while (getline(Read, line)){
+    std::ifstream objFile(filename);
 
-            // o - object
-        if (line[0] == 'o'){
-            for (int i = 2; i < static_cast<int>(line.length()); ++i) {
-                //std::cout << line[i];
-            }
-            std::cout << std::endl;
-
-            // usemtl = mtl colour
-        } else if (line[0] == 'u') {
-            std::string colour;
-            for (int i = 2; i < static_cast<int>(line.length()); ++i) {
-                colour += line[i];
-            }
-            Colour c = stringToColour();
-            triangle.colour = std::move(c);
-
-            // v - vertex
-        } else if (line[0] == 'v') {
-            std::string coordinate;
-            glm::vec3 point;
-            int i = 7;
-            while (std::isspace(line[i])) {
-                coordinate += line[i];
-                ++ i;
-            }
-            point.x = std::stof(coordinate);
-            ++ i;
-            while (std::isspace(line[i])) {
-                coordinate += line[i];
-                ++ i;
-            }
-            point.y = std::stof(coordinate);
-            ++ i;
-            while (std::isspace(line[i])) {
-                coordinate += line[i];
-                ++ i;
-            }
-            point.z = std::stof(coordinate);
-            vertices.push_back(point);
-
-            // f - facet
-        } else if (line[0] == 'f') {
-            std::array<glm::vec3, 3> v;
-            std::string index;
-            int vi = 0;
-            for (int i = 2; i < static_cast<int>(line.length()); ++i) {
-                if (!std::isspace(line[i])) {
-                    if (line[i] != '/') {
-                        index += line[i];
-                    } else {
-                        v[vi] = vertices[std::stoi(index) -1];
-                        index.clear();
-                        ++ vi;
-                    }
-                }
-            }
-            triangle.vertices = v;
-            drawModel(window, triangle);
-        }
+    // handle error : when file is not opened
+    if (!objFile.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return triangles;
     }
-    Read.close();
+
+    while (getline(objFile, line)){
+        std::istringstream iss(line);
+        std::string token;
+        iss >> token;
+
+
+        // u - usemtl (colour)
+        if (token == "u") {
+            std::string colourName;
+            iss >> colourName;
+            //TODO : use hashmap to find colour
+            currentColour = stringToColour(colourName);
+        }
+
+        // v - vertex
+        else if (token == "v") {
+            glm::vec3 vertex;
+            iss >> vertex.x >> vertex.y >> vertex.z;
+            vertices.push_back(vertex);
+        }
+
+        // f - face
+        else if (token == "f") {
+            std::string vertex;
+            std::array<int, 3> vertexIndices;
+
+            // extract vertex indices and put it in vertexIndices
+            for (int i = 0; i < 3; ++i) {
+                iss >> vertex;
+                size_t pos = vertex.find('/');
+                if (pos != std::string::npos) { // TODO : npos study
+                    vertex = vertex.substr(0, pos);
+                }
+                vertexIndices[i] = std::stoi(vertex) -1;
+            }
+
+            // when all vertex indices are valid
+            if (vertexIndices[0] >= 0 && vertexIndices[1] >= 0 && vertexIndices[2] >= 0) {
+                ModelTriangle triangle;
+                for (int i = 0; i < 3; ++i) {
+                    triangle.vertices[i] = vertices[vertexIndices[i]];
+                }
+                triangle.colour = currentColour;
+                triangles.push_back(triangle);
+            }
+        }
+
+    }
+    objFile.close();
+    return triangles;
 }
 
 
-CanvasTriangle randomTriangle(DrawingWindow &window){
+CanvasTriangle randomTriangle(){
     CanvasTriangle triangle;
 
     triangle.v0().x = rand() % WIDTH;
@@ -327,7 +323,7 @@ void draw(DrawingWindow &window) {
     v2.texturePoint = TexturePoint(65, 330);
     texturedTriangle(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
 
-    readOBJ(window, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
+    readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj");
 
 //    uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
 //    uint32_t red = (255 << 24) + (255 << 16) + (0 << 8) + 0;
@@ -346,10 +342,10 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
         else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
         else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
         else if (event.key.keysym.sym == SDLK_u) {
-            strokedTriangle(window, randomTriangle(window), colour);
+            strokedTriangle(window, randomTriangle(), colour);
         }
         else if (event.key.keysym.sym == SDLK_f) {
-            filledTriangle(window, randomTriangle(window), colour);
+            filledTriangle(window, randomTriangle(), colour);
         }
         else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
