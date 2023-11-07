@@ -16,6 +16,8 @@
 #define WIDTH 320
 #define HEIGHT 240
 
+bool terminate = false;
+
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     std::vector<float> result;
     result.push_back(from);
@@ -299,7 +301,7 @@ void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoin
 }
 
 
-void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
+void filledTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
     // sort points
     if (p0.y > p1.y)   std::swap(p0, p1);
@@ -317,7 +319,7 @@ void filledTriangle (DrawingWindow &window, CanvasTriangle triangle, Colour colo
 }
 
 
-void texturedTriangle(DrawingWindow &window, CanvasTriangle triangle, const std::string &filename){
+void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const std::string &filename){
     TextureMap texture = TextureMap(filename);
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
     // sort points
@@ -347,13 +349,25 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
         else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
         else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
         else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
+        else if (event.key.keysym.sym == SDLK_q) terminate = true;
 
         else if (event.key.keysym.sym == SDLK_u) {
             strokedTriangleDraw(window, randomTriangle(), colour);
         }
 
         else if (event.key.keysym.sym == SDLK_f) {
-            filledTriangle(window, randomTriangle(), colour);
+            filledTriangleDraw(window, randomTriangle(), colour);
+        }
+
+        else if (event.key.keysym.sym == SDLK_t) {
+            CanvasPoint v0 = CanvasPoint(160, 10);
+            CanvasPoint v1 = CanvasPoint(300, 230);
+            CanvasPoint v2 = CanvasPoint(10, 150);
+            v0.texturePoint = TexturePoint(195, 5);
+            v1.texturePoint = TexturePoint(395, 380);
+            v2.texturePoint = TexturePoint(65, 330);
+            texturedTriangleDraw(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+
         }
 
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -370,7 +384,7 @@ int main(int argc, char *argv[]) {
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
     std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl);
 
-    while (true) {
+    while (!terminate) {
         if (window.pollForInputEvents(event)) handleEvent(event, window);
 
         window.renderFrame();
