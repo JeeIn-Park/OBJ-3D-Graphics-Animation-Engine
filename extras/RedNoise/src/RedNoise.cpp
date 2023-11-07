@@ -62,17 +62,20 @@ Colour stringToColour () {
 void readOBJ(DrawingWindow &window, const std::string &filename){
     std::vector<glm::vec3> vertices;
     ModelTriangle triangle;
-    int index = 1;
+    // int index = 1;
 
     std::string line;
     std::ifstream Read(filename);
     while (getline(Read, line)){
 
+            // o - object
         if (line[0] == 'o'){
             for (int i = 2; i < line.size(); ++i) {
                 //std::cout << line[i];
             }
             std::cout << std::endl;
+
+            // usemtl = mtl colour
         } else if (line[0] == 'u') {
             std::string colour;
             for (int i = 2; i < line.size(); ++i) {
@@ -80,6 +83,8 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
             }
             Colour c = stringToColour();
             triangle.colour = std::move(c);
+
+            // v - vertex
         } else if (line[0] == 'v') {
             std::string coordinate;
             glm::vec3 point;
@@ -102,16 +107,26 @@ void readOBJ(DrawingWindow &window, const std::string &filename){
             }
             point.z = std::stof(coordinate);
             vertices.push_back(point);
+
+            // f - facet
         } else if (line[0] == 'f') {
             std::array<glm::vec3, 3> v;
-            // TODO : this needs to deal with longer integers
-            v[0] = vertices[static_cast<int>(line[2]) - index];
-            v[1] = vertices[static_cast<int>(line[5]) - index];
-            v[2] = vertices[static_cast<int>(line[8]) - index];
+            std::string index;
+            int vi = 0;
+            for (int i = 2; i < line.size(); ++i) {
+                if (!std::isspace(line[i])) {
+                    if (line[i] != '/') {
+                        index += line[i];
+                    } else {
+                        v[vi] = vertices[std::stoi(index) -1];
+                        index.clear();
+                        ++ vi;
+                    }
+                }
+
+            }
             triangle.vertices = v;
-            // TODO: draw a triangle
-        } else {
-            vertices.clear();
+            drawModel(window, triangle);
         }
     }
     Read.close();
