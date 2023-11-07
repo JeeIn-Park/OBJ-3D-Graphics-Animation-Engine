@@ -16,8 +16,6 @@
 #define WIDTH 320
 #define HEIGHT 240
 
-bool terminate = false;
-
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     std::vector<float> result;
     result.push_back(from);
@@ -341,7 +339,7 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
     strokedTriangleDraw(window, triangle, white);
 }
 
-void handleEvent(SDL_Event event, DrawingWindow &window) {
+bool handleEvent(SDL_Event event, DrawingWindow &window) {
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
     if (event.type == SDL_KEYDOWN) {
         if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
@@ -349,7 +347,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
         else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
         else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
         else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
-        else if (event.key.keysym.sym == SDLK_q) terminate = true;
+        else if (event.key.keysym.sym == SDLK_q) return true;
 
         else if (event.key.keysym.sym == SDLK_u) {
             strokedTriangleDraw(window, randomTriangle(), colour);
@@ -374,18 +372,21 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
         window.savePPM("output.ppm");
         window.saveBMP("output.bmp");
     }
+
+    return false;
 }
 
 
 int main(int argc, char *argv[]) {
     DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
     SDL_Event event;
+    bool terminate = false;
 
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
     std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl);
 
     while (!terminate) {
-        if (window.pollForInputEvents(event)) handleEvent(event, window);
+        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window);
 
         window.renderFrame();
     }
