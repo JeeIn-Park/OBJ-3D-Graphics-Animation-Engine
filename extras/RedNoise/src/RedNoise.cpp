@@ -60,6 +60,7 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
 
     std::string line;
     std::ifstream mtlFile(filename);
+    std::string colourName;
 
     // handle error : when file is not opened
     if (!mtlFile.is_open()) {
@@ -68,8 +69,6 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     }
 
     while (getline(mtlFile, line)) {
-        std::string colourName;
-
         std::istringstream iss(line);
         std::string token;
         iss >> token;
@@ -77,20 +76,17 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
         // newmtl - new colour
         if (token == "newmtl") {
             iss >> colourName;
+            std::cout << "New Material: " << colourName << std::endl;
         }
 
         // Kd - RGB value
         if (token == "Kd") {
-            std::string value;
-            std::array<int, 3> rgb;
-
-            for (int i = 0; i < 3; ++i) {
-                iss >> value;
-                rgb[i] = std::stoi(value) * 255;
-            }
+            std::array<float, 3> rgb;
+            iss >> rgb[0] >> rgb[1] >> rgb[2];
+            std::cout << "RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << std::endl;
 
             if (rgb[0] >= 0 && rgb[1] >= 0 && rgb[2] >= 0) {
-                colourMap[colourName] = Colour(rgb[0], rgb[1], rgb[2]);
+                colourMap[colourName] = Colour(255 * rgb[0], 255 * rgb[1], 255 * rgb[2]);
             }
 
         }
@@ -98,6 +94,9 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     }
 
     mtlFile.close();
+    for (const auto& pair : colourMap) {
+        std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
+    }
     return colourMap;
 }
 
@@ -195,25 +194,15 @@ CanvasTriangle randomTriangle() {
    *  @param  c  cameraPosition
    *  @param  v  vertexPosition
    *  @param  f  focalLength
-   *  @param  s  re-scaling factor
   */
-CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, int s) {
+CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s) {
     // model coordinate system -> camera coordinate system
-    v.x = v.x - c.x;  v.y = v.y - c.y;  v.z = v.z - c.z;
+    std::cout << "original point : " << v.x << ", " << v.y << ", " << v.z << std::endl;
+    CanvasPoint r = CanvasPoint(s * f * ((v.x - c.x)/(v.z - c.z)) + WIDTH/2,
+                                s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2 );
+    std::cout << "view point : " << r.x << ", " << r.y << std::endl;
+    return r;
 
-    return CanvasPoint(s * f * (v.x/v.z) + WIDTH/2 ,  s * f * (v.y/v.z) + HEIGHT/2 );
-}
-
-/**
-   *  @param  c  cameraPosition
-   *  @param  v  vertexPosition
-   *  @param  f  focalLength
-  */
-CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f) {
-    // model coordinate system -> camera coordinate system
-    v.x = v.x - c.x;  v.y = v.y - c.y;  v.z = v.z - c.z;
-
-    return CanvasPoint(f * (v.x/v.z) + WIDTH/2 ,  f * (v.y/v.z) + HEIGHT/2 );
 }
 
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour){
@@ -415,9 +404,10 @@ int main(int argc, char *argv[]) {
     CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         for (int ii = 0; ii < 3; ++ ii){
-            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f);
+            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f, 40);
             std::cout << v << std::endl;
             window.setPixelColour(v.x, v.y, Colour(254,254,254));
+            window.setPixelColour(v.x, v.y, obj[i].colour);
         }
     }
 
