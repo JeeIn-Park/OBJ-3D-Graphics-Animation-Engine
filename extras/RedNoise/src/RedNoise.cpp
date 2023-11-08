@@ -191,6 +191,18 @@ CanvasTriangle randomTriangle() {
     }
 }
 
+/**
+   *  @param  c  cameraPosition
+   *  @param  v  vertexPosition
+   *  @param  f  focalLength
+  */
+CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f) {
+    // model coordinate system -> camera coordinate system
+    v.x = v.x - c.x;  v.y = v.y - c.y;  v.z = v.z - c.z;
+
+    return CanvasPoint(f * (v.x/v.z) + WIDTH/2 ,  f * (v.y/v.z) + HEIGHT/2 );
+}
+
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
