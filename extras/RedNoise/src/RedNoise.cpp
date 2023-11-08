@@ -195,6 +195,19 @@ CanvasTriangle randomTriangle() {
    *  @param  c  cameraPosition
    *  @param  v  vertexPosition
    *  @param  f  focalLength
+   *  @param  s  re-scaling factor
+  */
+CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, int s) {
+    // model coordinate system -> camera coordinate system
+    v.x = v.x - c.x;  v.y = v.y - c.y;  v.z = v.z - c.z;
+
+    return CanvasPoint(s * f * (v.x/v.z) + WIDTH/2 ,  s * f * (v.y/v.z) + HEIGHT/2 );
+}
+
+/**
+   *  @param  c  cameraPosition
+   *  @param  v  vertexPosition
+   *  @param  f  focalLength
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f) {
     // model coordinate system -> camera coordinate system
@@ -396,6 +409,17 @@ int main(int argc, char *argv[]) {
 
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
     std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl);
+
+    glm::vec3 c = glm::vec3 (0.0,0.0,4.0);
+    float f = 2;
+    CanvasPoint v;
+    for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
+        for (int ii = 0; ii < 3; ++ ii){
+            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f);
+            std::cout << v << std::endl;
+            window.setPixelColour(v.x, v.y, Colour(254,254,254));
+        }
+    }
 
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window);
