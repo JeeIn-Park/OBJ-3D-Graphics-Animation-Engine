@@ -163,9 +163,9 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
     }
     objFile.close();
 
-    for (const glm::vec3 & vertex : vertices) {
+//    for (const glm::vec3 & vertex : vertices) {
 //        std::cout << vertex.x << "," << vertex.y << "," << vertex.z << std::endl;
-    }
+//    }
 //    for (const ModelTriangle& triangle : triangles) {
 //        std::cout << triangle << std::endl;
 //    }
@@ -251,10 +251,6 @@ void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, Textu
         window.setPixelColour(from.x + (xStepSize*i), from.y + (yStepSize*i),
                               Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF));
     }
-}
-
-void modelDraw (DrawingWindow &window, ModelTriangle triangle){
-
 }
 
 
@@ -377,7 +373,6 @@ void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm:
 }
 
 void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
-    CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
         CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
@@ -387,7 +382,6 @@ void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
 }
 
 void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
-    CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
         CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
