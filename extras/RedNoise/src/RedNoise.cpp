@@ -15,7 +15,7 @@
 
 #define WIDTH 320
 #define HEIGHT 240
-using PixelScreen = int [WIDTH][HEIGHT];
+using PixelScreen = float [WIDTH][HEIGHT];
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     std::vector<float> result;
@@ -236,17 +236,24 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour, PixelScreen &d){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
+    float dDiff = to.depth - from.depth;
 
+    // TODO : do I need to consider dDiff as well here?
     float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
 
     float xStepSize = xDiff/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float dStepSize = dDiff/numberOfSteps;
 
     CanvasPoint point;
     for (int i = 0; i < numberOfSteps; ++i ) {
         point.x = from.x + (xStepSize*i);
         point.y = from.y + (yStepSize*i);
-        window.setPixelColour(point.x, point.y, colour);
+        point.depth = from.depth + (dStepSize*i);
+        if (point.depth > d[static_cast<int>(point.x)][static_cast<int>(point.y)]) {
+            d[static_cast<int>(point.x)][static_cast<int>(point.y)] = point.depth;
+            window.setPixelColour(point.x, point.y, colour);
+        }
     }
 }
 
@@ -281,9 +288,9 @@ void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour
 }
 
 void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour, PixelScreen &d) {
-    lineDraw(window, triangle.v0(), triangle.v1(), colour);
-    lineDraw(window, triangle.v1(), triangle.v2(), colour);
-    lineDraw(window, triangle.v0(), triangle.v2(), colour);
+    lineDraw(window, triangle.v0(), triangle.v1(), colour, d);
+    lineDraw(window, triangle.v1(), triangle.v2(), colour, d);
+    lineDraw(window, triangle.v0(), triangle.v2(), colour, d);
 }
 
 void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour){
@@ -320,7 +327,7 @@ void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint
         x1 = top.x + (xStepSize_1*i);
         x2 = top.x + (xStepSize_2*i);
         y = top.y + (yStepSize*i);
-        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour, d);
     }
 }
 
@@ -511,6 +518,12 @@ int main(int argc, char *argv[]) {
     float f = 2.0;
 
     PixelScreen depthBuffer;
+//    for (int i = 0; i < WIDTH; ++i) {
+//        for (int j = 0; j < HEIGHT; ++j) {
+//            depthBuffer[i][j] = 0.0f;
+//        }
+//    }
+//
     objFaceDraw(window, depthBuffer, obj, c, f, 150);
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window);
