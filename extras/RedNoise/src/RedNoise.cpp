@@ -76,14 +76,14 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
         // newmtl - new colour
         if (token == "newmtl") {
             iss >> colourName;
-            std::cout << "New Material: " << colourName << std::endl;
+//            std::cout << "New Material: " << colourName << std::endl;
         }
 
         // Kd - RGB value
         if (token == "Kd") {
             std::array<float, 3> rgb;
             iss >> rgb[0] >> rgb[1] >> rgb[2];
-            std::cout << "RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << std::endl;
+//            std::cout << "RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << std::endl;
 
             if (rgb[0] >= 0 && rgb[1] >= 0 && rgb[2] >= 0) {
                 colourMap[colourName] = Colour(255 * rgb[0], 255 * rgb[1], 255 * rgb[2]);
@@ -94,13 +94,13 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     }
 
     mtlFile.close();
-    for (const auto& pair : colourMap) {
-        std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
-    }
+//    for (const auto& pair : colourMap) {
+//        std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
+//    }
     return colourMap;
 }
 
-std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap){
+std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
     std::vector<ModelTriangle> triangles;
     std::vector<glm::vec3> vertices;
     Colour currentColour;
@@ -131,7 +131,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         else if (token == "v") {
             glm::vec3 vertex;
             iss >> vertex.x >> vertex.y >> vertex.z;
-            vertices.push_back(vertex);
+            vertices.push_back(glm::vec3(s * vertex.x, s * vertex.y, s * vertex.z));
         }
 
         // f - face
@@ -162,6 +162,13 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
     }
     objFile.close();
+
+    for (const glm::vec3 & vertex : vertices) {
+//        std::cout << vertex.x << "," << vertex.y << "," << vertex.z << std::endl;
+    }
+//    for (const ModelTriangle& triangle : triangles) {
+//        std::cout << triangle << std::endl;
+//    }
     return triangles;
 }
 
@@ -197,12 +204,14 @@ CanvasTriangle randomTriangle() {
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s) {
     // model coordinate system -> camera coordinate system
-    std::cout << "original point : " << v.x << ", " << v.y << ", " << v.z << std::endl;
+//    std::cout << "original point : " << v.x << ", " << v.y << ", " << v.z << std::endl;
     CanvasPoint r = CanvasPoint(s * f * ((v.x - c.x)/(v.z - c.z)) + WIDTH/2,
                                 s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2 );
-    std::cout << "view point : " << r.x << ", " << r.y << std::endl;
+//    std::cout << "view point : " << r.x - WIDTH/2 << ", " << r.y - HEIGHT/2 << std::endl;
+//    std::cout << "shifted point : " << r.x << ", " << r.y << std::endl;
     return r;
 
+    // original point : 0.973346, 0.962418, 0.980711
 }
 
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour){
@@ -326,8 +335,10 @@ void filledTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour 
     lineDraw(window, p1, pk, colour);
     flatTriangleColourFill(window, p2, pk, p1, colour);
 
-    Colour white = Colour(255, 255, 255);
-    strokedTriangleDraw(window, triangle, white);
+//    Colour white = Colour(255, 255, 255);
+//    strokedTriangleDraw(window, triangle, white);
+
+    strokedTriangleDraw(window, triangle, colour);
 }
 
 
@@ -351,6 +362,38 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
     flatTriangleTextureFill(window, p2, pk, p1, texture);
     Colour white = Colour(255, 255, 255);
     strokedTriangleDraw(window, triangle, white);
+}
+
+void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+    CanvasPoint v;
+    for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
+        for (int ii = 0; ii < 3; ++ ii){
+            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f, s);
+            std::cout << v << std::endl;
+            window.setPixelColour(v.x, v.y, obj[i].colour);
+            std::cout << obj[i].colour << std::endl;
+        }
+    }
+}
+
+void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+    CanvasPoint v;
+    for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
+        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
+        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
+        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s);
+        strokedTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour);
+    }
+}
+
+void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+    CanvasPoint v;
+    for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
+        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
+        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
+        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s);
+        filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour);
+    }
 }
 
 bool handleEvent(SDL_Event event, DrawingWindow &window) {
@@ -397,23 +440,13 @@ int main(int argc, char *argv[]) {
     bool terminate = false;
 
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
-    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl);
+    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
 
     glm::vec3 c = glm::vec3 (0.0,0.0,4.0);
-    float f = 2;
-    CanvasPoint v;
-    for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
-        for (int ii = 0; ii < 3; ++ ii){
-            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f, 40);
-            std::cout << v << std::endl;
-            window.setPixelColour(v.x, v.y, Colour(254,254,254));
-            window.setPixelColour(v.x, v.y, obj[i].colour);
-        }
-    }
-
+    float f = 2.0;
+    objFaceDraw(window, obj, c, f, 150);
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window);
-
         window.renderFrame();
     }
 }
