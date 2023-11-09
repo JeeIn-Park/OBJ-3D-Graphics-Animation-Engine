@@ -202,11 +202,14 @@ CanvasTriangle randomTriangle() {
    *  @param  v  vertexPosition
    *  @param  f  focalLength
   */
-CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s) {
+CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s, float** d) {
     // model coordinate system -> camera coordinate system
 //    std::cout << "original point : " << v.x << ", " << v.y << ", " << v.z << std::endl;
     CanvasPoint r = CanvasPoint(s * f * ((v.x - c.x)/(v.z - c.z)) + WIDTH/2,
-                                s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2 );
+                                s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2,
+                                1/-(v.z - c.z));
+    //TODO : check if this depth calculation is correct
+
 //    std::cout << "view point : " << r.x - WIDTH/2 << ", " << r.y - HEIGHT/2 << std::endl;
 //    std::cout << "shifted point : " << r.x << ", " << r.y << std::endl;
     return r;
@@ -214,19 +217,24 @@ CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float
     // original point : 0.973346, 0.962418, 0.980711
 }
 
-void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour){
+void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour, float** d){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
+    float dDiff = to.depth - from.depth;
 
-    float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
+    float numberOfSteps = std::max(std::max(abs(xDiff), abs(yDiff)), abs(dDiff));
 
     float xStepSize = xDiff/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float dStepSize = dDiff/numberOfSteps;
 
     CanvasPoint point;
     for (int i = 0; i < numberOfSteps; ++i ) {
         point.x = from.x + (xStepSize*i);
         point.y = from.y + (yStepSize*i);
+        point.depth = from.depth + (dStepSize*i);
+        //TODO : change the d
+        // only change the pixel value when what we want to draw is in front of the object on same lo
         window.setPixelColour(point.x, point.y, colour);
     }
 }
@@ -254,28 +262,35 @@ void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, Textu
 }
 
 
-void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
-    lineDraw(window, triangle.v0(), triangle.v1(), colour);
-    lineDraw(window, triangle.v1(), triangle.v2(), colour);
-    lineDraw(window, triangle.v0(), triangle.v2(), colour);
+void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour, float** d) {
+    lineDraw(window, triangle.v0(), triangle.v1(), colour, d);
+    lineDraw(window, triangle.v1(), triangle.v2(), colour, d);
+    lineDraw(window, triangle.v0(), triangle.v2(), colour, d);
 }
 
-void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour){
+void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour, float** d){
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
     float yDiff = bot1.y - top.y;
-    float numberOfSteps = std::max(std::max(abs(xDiff_1), abs(xDiff_2)), abs(yDiff));
+    float dDiff_1 = bot1.depth - top.depth;
+    float dDiff_2 = bot2.depth - top.depth;
+    float numberOfSteps = std::max(std::max(std::max(abs(xDiff_1), abs(xDiff_2)), std::max(abs(dDiff_1), abs(dDiff_2))), abs(yDiff));
 
     float xStepSize_1 = xDiff_1/numberOfSteps;
     float xStepSize_2 = xDiff_2/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float dStepSize_1 = dDiff_1/numberOfSteps;
+    float dStepSize_2 = dDiff_2/numberOfSteps;
 
-    float x1, x2, y;
+    float x1, x2, y, d1, d2;
     for (int i = 0; i < numberOfSteps; ++i ) {
         x1 = top.x + (xStepSize_1*i);
         x2 = top.x + (xStepSize_2*i);
         y = top.y + (yStepSize*i);
-        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+        d1 = top.depth + (dStepSize_1*i);
+        d2 = top.depth + (dStepSize_2*i);
+
+        lineDraw(window, CanvasPoint(x1, y, d1), CanvasPoint(x2, y, d2), colour, d);
     }
 }
 
@@ -318,7 +333,7 @@ void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoin
 }
 
 
-void filledTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour) {
+void filledTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour, float** d) {
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
     // sort points
     if (p0.y > p1.y)   std::swap(p0, p1);
@@ -327,18 +342,18 @@ void filledTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour 
 
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
 
-    flatTriangleColourFill(window, p0, pk, p1, colour);
-    lineDraw(window, p1, pk, colour);
-    flatTriangleColourFill(window, p2, pk, p1, colour);
+    flatTriangleColourFill(window, p0, pk, p1, colour, d);
+    lineDraw(window, p1, pk, colour, d);
+    flatTriangleColourFill(window, p2, pk, p1, colour, d);
 
 //    Colour white = Colour(255, 255, 255);
 //    strokedTriangleDraw(window, triangle, white);
 
-    strokedTriangleDraw(window, triangle, colour);
+    strokedTriangleDraw(window, triangle, colour, d);
 }
 
 
-void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const std::string &filename){
+void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const std::string &filename, float** d){
     TextureMap texture = TextureMap(filename);
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
     // sort points
@@ -357,14 +372,14 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
     textureDraw(window, p1, pk, texture);
     flatTriangleTextureFill(window, p2, pk, p1, texture);
     Colour white = Colour(255, 255, 255);
-    strokedTriangleDraw(window, triangle, white);
+    strokedTriangleDraw(window, triangle, white, d);
 }
 
-void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s, float** d) {
     CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         for (int ii = 0; ii < 3; ++ ii){
-            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f, s);
+            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f, s, d);
             std::cout << v << std::endl;
             window.setPixelColour(v.x, v.y, obj[i].colour);
             std::cout << obj[i].colour << std::endl;
@@ -372,25 +387,25 @@ void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm:
     }
 }
 
-void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s, float** d) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
-        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
-        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
-        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s);
-        strokedTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour);
+        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s, d);
+        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s, d);
+        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s, d);
+        strokedTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
     }
 }
 
-void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s, float** d) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
-        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
-        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
-        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s);
-        filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour);
+        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s, d);
+        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s, d);
+        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s, d);
+        filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
     }
 }
 
-bool handleEvent(SDL_Event event, DrawingWindow &window) {
+bool handleEvent(SDL_Event event, DrawingWindow &window, float** d) {
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
     if (event.type == SDL_KEYDOWN) {
         if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
@@ -401,11 +416,11 @@ bool handleEvent(SDL_Event event, DrawingWindow &window) {
         else if (event.key.keysym.sym == SDLK_q) return true;
 
         else if (event.key.keysym.sym == SDLK_u) {
-            strokedTriangleDraw(window, randomTriangle(), colour);
+            strokedTriangleDraw(window, randomTriangle(), colour, d);
         }
 
         else if (event.key.keysym.sym == SDLK_f) {
-            filledTriangleDraw(window, randomTriangle(), colour);
+            filledTriangleDraw(window, randomTriangle(), colour, d);
         }
 
         else if (event.key.keysym.sym == SDLK_t) {
@@ -415,7 +430,7 @@ bool handleEvent(SDL_Event event, DrawingWindow &window) {
             v0.texturePoint = TexturePoint(195, 5);
             v1.texturePoint = TexturePoint(395, 380);
             v2.texturePoint = TexturePoint(65, 330);
-            texturedTriangleDraw(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+            texturedTriangleDraw(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm", d);
 
         }
 
@@ -438,9 +453,22 @@ int main(int argc, char *argv[]) {
 
     glm::vec3 c = glm::vec3 (0.0,0.0,4.0);
     float f = 2.0;
-    objFaceDraw(window, obj, c, f, 150);
+
+    // TODO : study heap/memory allocation
+    // TODO : study pointer
+    float ** depthBuffer = new float*[WIDTH];
+    for (int i = 0; i < WIDTH; ++i) {
+        depthBuffer[i] = new float [HEIGHT];
+    }
+    for (int i = 0; i < WIDTH; ++i) {
+        for (int j = 0; j < HEIGHT; ++j) {
+            depthBuffer[i][j] = i * HEIGHT + j;
+        }
+    }
+
+    objFaceDraw(window, obj, c, f, 150, depthBuffer);
     while (!terminate) {
-        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window);
+        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, depthBuffer);
         window.renderFrame();
     }
 }
