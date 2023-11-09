@@ -15,6 +15,7 @@
 
 #define WIDTH 320
 #define HEIGHT 240
+using PixelScreen = int [WIDTH][HEIGHT];
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     std::vector<float> result;
@@ -206,7 +207,8 @@ CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float
     // model coordinate system -> camera coordinate system
 //    std::cout << "original point : " << v.x << ", " << v.y << ", " << v.z << std::endl;
     CanvasPoint r = CanvasPoint(s * f * ((v.x - c.x)/(v.z - c.z)) + WIDTH/2,
-                                s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2 );
+                                s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2,
+                                -(v.z - c.z));
 //    std::cout << "view point : " << r.x - WIDTH/2 << ", " << r.y - HEIGHT/2 << std::endl;
 //    std::cout << "shifted point : " << r.x << ", " << r.y << std::endl;
     return r;
@@ -230,6 +232,24 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
         window.setPixelColour(point.x, point.y, colour);
     }
 }
+
+void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour, PixelScreen &d){
+    float xDiff = to.x - from.x;
+    float yDiff = to.y - from.y;
+
+    float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
+
+    float xStepSize = xDiff/numberOfSteps;
+    float yStepSize = yDiff/numberOfSteps;
+
+    CanvasPoint point;
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        point.x = from.x + (xStepSize*i);
+        point.y = from.y + (yStepSize*i);
+        window.setPixelColour(point.x, point.y, colour);
+    }
+}
+
 
 void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, TextureMap texture){
     float xDiff = to.x - from.x;
@@ -260,6 +280,12 @@ void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour
     lineDraw(window, triangle.v0(), triangle.v2(), colour);
 }
 
+void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour, PixelScreen &d) {
+    lineDraw(window, triangle.v0(), triangle.v1(), colour);
+    lineDraw(window, triangle.v1(), triangle.v2(), colour);
+    lineDraw(window, triangle.v0(), triangle.v2(), colour);
+}
+
 void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour){
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
@@ -278,6 +304,26 @@ void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint
         lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
     }
 }
+
+void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour, PixelScreen &d){
+    float xDiff_1 = bot1.x - top.x;
+    float xDiff_2 = bot2.x - top.x;
+    float yDiff = bot1.y - top.y;
+    float numberOfSteps = std::max(std::max(abs(xDiff_1), abs(xDiff_2)), abs(yDiff));
+
+    float xStepSize_1 = xDiff_1/numberOfSteps;
+    float xStepSize_2 = xDiff_2/numberOfSteps;
+    float yStepSize = yDiff/numberOfSteps;
+
+    float x1, x2, y;
+    for (int i = 0; i < numberOfSteps; ++i ) {
+        x1 = top.x + (xStepSize_1*i);
+        x2 = top.x + (xStepSize_2*i);
+        y = top.y + (yStepSize*i);
+        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour);
+    }
+}
+
 
 void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2,
                               TextureMap texture){
@@ -338,6 +384,28 @@ void filledTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour 
 }
 
 
+void filledTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour colour, PixelScreen &d) {
+    CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
+    // sort points
+    if (p0.y > p1.y)   std::swap(p0, p1);
+    if (p1.y > p2.y)   std::swap(p1, p2);
+    if (p0.y > p1.y)   std::swap(p0, p1);
+
+    CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
+
+    flatTriangleColourFill(window, p0, pk, p1, colour, d);
+    lineDraw(window, p1, pk, colour, d);
+    flatTriangleColourFill(window, p2, pk, p1, colour, d);
+
+//    Colour white = Colour(255, 255, 255);
+//    strokedTriangleDraw(window, triangle, white);
+
+    strokedTriangleDraw(window, triangle, colour, d);
+}
+
+
+
+
 void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const std::string &filename){
     TextureMap texture = TextureMap(filename);
     CanvasPoint p0 = triangle.v0(), p1 = triangle.v1(), p2 = triangle.v2();
@@ -381,12 +449,12 @@ void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
     }
 }
 
-void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+void objFaceDraw(DrawingWindow &window, PixelScreen &d, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
         CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
         CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s);
-        filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour);
+        filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
     }
 }
 
@@ -433,12 +501,17 @@ int main(int argc, char *argv[]) {
     SDL_Event event;
     bool terminate = false;
 
+    // read mtl and obj files
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
     std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
 
+    // camera point
     glm::vec3 c = glm::vec3 (0.0,0.0,4.0);
+    // focal length
     float f = 2.0;
-    objFaceDraw(window, obj, c, f, 150);
+
+    PixelScreen depthBuffer;
+    objFaceDraw(window, depthBuffer, obj, c, f, 150);
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window);
         window.renderFrame();
