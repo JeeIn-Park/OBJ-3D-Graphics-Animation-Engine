@@ -208,7 +208,7 @@ CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float
 //    std::cout << "original point : " << v.x << ", " << v.y << ", " << v.z << std::endl;
     CanvasPoint r = CanvasPoint(s * f * ((v.x - c.x)/(v.z - c.z)) + WIDTH/2,
                                 s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2,
-                                -(v.z - c.z));
+                                1/-(v.z - c.z));
 //    std::cout << "view point : " << r.x - WIDTH/2 << ", " << r.y - HEIGHT/2 << std::endl;
 //    std::cout << "shifted point : " << r.x << ", " << r.y << std::endl;
     return r;
@@ -316,18 +316,26 @@ void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
     float yDiff = bot1.y - top.y;
+    float dDiff_1 = bot1.depth - top.depth;
+    float dDiff_2 = bot2.depth - top.depth;
+
+    // TODO : do I need to consider the depths here?
     float numberOfSteps = std::max(std::max(abs(xDiff_1), abs(xDiff_2)), abs(yDiff));
 
     float xStepSize_1 = xDiff_1/numberOfSteps;
     float xStepSize_2 = xDiff_2/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float dStepSize_1 = dDiff_1/numberOfSteps;
+    float dStepSize_2 = dDiff_2/numberOfSteps;
 
-    float x1, x2, y;
+    float x1, x2, y, d1, d2;
     for (int i = 0; i < numberOfSteps; ++i ) {
         x1 = top.x + (xStepSize_1*i);
         x2 = top.x + (xStepSize_2*i);
         y = top.y + (yStepSize*i);
-        lineDraw(window, CanvasPoint(x1, y), CanvasPoint(x2, y), colour, d);
+        d1 = top.depth + (dStepSize_1*i);
+        d2 = top.depth + (dStepSize_2*i);
+        lineDraw(window, CanvasPoint(x1, y, d1), CanvasPoint(x2, y, d2), colour, d);
     }
 }
 
