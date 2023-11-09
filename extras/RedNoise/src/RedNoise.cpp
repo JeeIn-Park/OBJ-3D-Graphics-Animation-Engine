@@ -13,6 +13,9 @@
 #include <unordered_map>
 #include <sstream>
 
+// own libraries
+#include "libs/Reader_OBJ_MTL.h"
+
 #define WIDTH 320
 #define HEIGHT 240
 using PixelScreen = float [WIDTH][HEIGHT];
@@ -55,124 +58,6 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     //use calculated last value as to if the gap cannot be represented by float
     return result;
 }
-
-std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
-    std::unordered_map<std::string, Colour> colourMap;
-
-    std::string line;
-    std::ifstream mtlFile(filename);
-    std::string colourName;
-
-    // handle error : when file is not opened
-    if (!mtlFile.is_open()) {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-        return colourMap;
-    }
-
-    while (getline(mtlFile, line)) {
-        std::istringstream iss(line);
-        std::string token;
-        iss >> token;
-
-        // newmtl - new colour
-        if (token == "newmtl") {
-            iss >> colourName;
-//            std::cout << "New Material: " << colourName << std::endl;
-        }
-
-        // Kd - RGB value
-        if (token == "Kd") {
-            std::array<float, 3> rgb;
-            iss >> rgb[0] >> rgb[1] >> rgb[2];
-//            std::cout << "RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << std::endl;
-
-            if (rgb[0] >= 0 && rgb[1] >= 0 && rgb[2] >= 0) {
-                colourMap[colourName] = Colour(255 * rgb[0], 255 * rgb[1], 255 * rgb[2]);
-            }
-
-        }
-
-    }
-
-    mtlFile.close();
-//    for (const auto& pair : colourMap) {
-//        std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
-//    }
-    return colourMap;
-}
-
-std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
-    std::vector<ModelTriangle> triangles;
-    std::vector<glm::vec3> vertices;
-    Colour currentColour;
-
-    std::string line;
-    std::ifstream objFile(filename);
-
-    // handle error : when file is not opened
-    if (!objFile.is_open()) {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-        return triangles;
-    }
-
-    while (getline(objFile, line)){
-        std::istringstream iss(line);
-        std::string token;
-        iss >> token;
-
-
-        // usemtl - colour
-        if (token == "usemtl") {
-            std::string colourName;
-            iss >> colourName;
-            currentColour = colourMap[colourName];
-        }
-
-        // v - vertex
-        else if (token == "v") {
-            glm::vec3 vertex;
-            iss >> vertex.x >> vertex.y >> vertex.z;
-            vertices.push_back(glm::vec3(s * vertex.x, s * vertex.y, s * vertex.z));
-        }
-
-        // f - face
-        else if (token == "f") {
-            std::string vertex;
-            std::array<int, 3> vertexIndices;
-
-            // extract vertex indices and put it in vertexIndices
-            for (int i = 0; i < 3; ++i) {
-                iss >> vertex;
-                size_t pos = vertex.find('/');
-                if (pos != std::string::npos) { // TODO : npos study
-                    vertex = vertex.substr(0, pos);
-                }
-                vertexIndices[i] = std::stoi(vertex) -1;
-            }
-
-            // when all vertex indices are valid
-            if (vertexIndices[0] >= 0 && vertexIndices[1] >= 0 && vertexIndices[2] >= 0) {
-                ModelTriangle triangle;
-                for (int i = 0; i < 3; ++i) {
-                    triangle.vertices[i] = vertices[vertexIndices[i]];
-                }
-                triangle.colour = currentColour;
-                triangles.push_back(triangle);
-            }
-        }
-
-    }
-    objFile.close();
-
-//    for (const glm::vec3 & vertex : vertices) {
-//        std::cout << vertex.x << "," << vertex.y << "," << vertex.z << std::endl;
-//    }
-//    for (const ModelTriangle& triangle : triangles) {
-//        std::cout << triangle << std::endl;
-//    }
-    return triangles;
-}
-
 
 CanvasTriangle randomTriangle() {
     CanvasTriangle triangle;
@@ -234,25 +119,20 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
 }
 
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour, PixelScreen &d){
-    float xDiff = to.x - from.x;
-    float yDiff = to.y - from.y;
-    float dDiff = to.depth - from.depth;
+    glm::vec3 f = glm::vec3(from.x, from.y, from.depth);
+    glm::vec3 t = glm::vec3(to.x, to.y, to.depth);
 
-    // TODO : do I need to consider dDiff as well here?
-    float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
+    float numberOfSteps = std::max(std::max(abs( to.x - from.x), abs(to.y - from.y)), abs(to.depth - from.depth));
 
-    float xStepSize = xDiff/numberOfSteps;
-    float yStepSize = yDiff/numberOfSteps;
-    float dStepSize = dDiff/numberOfSteps;
+    std::vector<glm::vec3> result = interpolateThreeElementValues(f, t, numberOfSteps);
 
-    CanvasPoint point;
-    for (int i = 0; i < numberOfSteps; ++i ) {
-        point.x = from.x + (xStepSize*i);
-        point.y = from.y + (yStepSize*i);
-        point.depth = from.depth + (dStepSize*i);
-        if (point.depth > d[static_cast<int>(point.x)][static_cast<int>(point.y)]) {
-            d[static_cast<int>(point.x)][static_cast<int>(point.y)] = point.depth;
-            window.setPixelColour(point.x, point.y, colour);
+    for (const auto& vec : result) {
+        if (vec[2] > d[static_cast<int>(vec[0])][static_cast<int>(vec[1])]) {
+            d[static_cast<int>(vec[0])][static_cast<int>(vec[1])] = vec[2];
+            window.setPixelColour(vec[0], vec[1], colour);
+        } else {
+            std::cout << "point rejected to be drawn : " << vec[0] << ", " << vec[1] << ", " << vec[2] << std::endl;
+            std::cout << "existing upper point : " << window.getPixelColour(vec[0], vec[1]) << std::endl;
         }
     }
 }
@@ -319,8 +199,9 @@ void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint
     float dDiff_1 = bot1.depth - top.depth;
     float dDiff_2 = bot2.depth - top.depth;
 
-    // TODO : do I need to consider the depths here?
-    float numberOfSteps = std::max(std::max(abs(xDiff_1), abs(xDiff_2)), abs(yDiff));
+
+    float numberOfSteps = std::max( std::max(std::max(abs(xDiff_1), abs(xDiff_2)),
+                                   std::max(abs(dDiff_1), abs(dDiff_2))), abs(yDiff));
 
     float xStepSize_1 = xDiff_1/numberOfSteps;
     float xStepSize_2 = xDiff_2/numberOfSteps;
@@ -443,6 +324,7 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
     strokedTriangleDraw(window, triangle, white);
 }
 
+
 void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
     CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
@@ -455,6 +337,7 @@ void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm:
     }
 }
 
+
 void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
@@ -463,6 +346,7 @@ void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
         strokedTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour);
     }
 }
+
 
 void objFaceDraw(DrawingWindow &window, PixelScreen &d, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
