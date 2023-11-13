@@ -55,6 +55,7 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
     return result;
 }
 
+
 std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     std::unordered_map<std::string, Colour> colourMap;
 
@@ -96,6 +97,7 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     mtlFile.close();
     return colourMap;
 }
+
 
 std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
     std::vector<ModelTriangle> triangles;
@@ -234,6 +236,7 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
     }
 }
 
+
 void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, TextureMap texture){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
@@ -263,6 +266,7 @@ void strokedTriangleDraw (DrawingWindow &window, CanvasTriangle triangle, Colour
     lineDraw(window, triangle.v0(), triangle.v2(), colour, d);
 }
 
+
 void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2, Colour colour, float** &d){
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
@@ -288,6 +292,7 @@ void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint
         lineDraw(window, CanvasPoint(x1, y, d1), CanvasPoint(x2, y, d2), colour, d);
     }
 }
+
 
 void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2,
                               TextureMap texture){
@@ -368,6 +373,7 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
     strokedTriangleDraw(window, triangle, white, d);
 }
 
+
 void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
     CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
@@ -380,6 +386,7 @@ void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm:
     }
 }
 
+
 void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s, float** &d) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
@@ -388,6 +395,7 @@ void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
         strokedTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
     }
 }
+
 
 void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 *c, float* f, float s, float** &d) {
     window.clearPixels();
@@ -399,24 +407,11 @@ void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
     }
 }
 
+
 void rotate(glm::vec3* c, char t){
     double o = 1.0 * M_PI / 180.0;
     glm::vec3 result;
-    if (t == 'w'){
-        result = glm::mat3 (
-                1, 0, 0,
-                0, cos(o), sin(o),
-                0, -sin(o), cos(o)
-                ) * *c;
-    }
-    else if (t == 's'){
-        result = glm::mat3 (
-                1, 0, 0,
-                0, cos(-o), sin(-o),
-                0, -sin(-o), cos(-o)
-        ) * *c;
-    }
-    else if (t == 'a'){
+    if (t == 'a'){
         result = glm::mat3 (
                 cos(o), 0, -sin(o),
                 0, 1, 0,
@@ -430,8 +425,23 @@ void rotate(glm::vec3* c, char t){
                 sin(-o), 0, cos(-o)
         ) * *c;
     }
+    else if (t == 'w'){
+        result = glm::mat3 (
+                1, 0, 0,
+                0, cos(o), sin(o),
+                0, -sin(o), cos(o)
+                ) * *c;
+    }
+    else if (t == 's'){
+        result = glm::mat3 (
+                1, 0, 0,
+                0, cos(-o), sin(-o),
+                0, -sin(-o), cos(-o)
+        ) * *c;
+    }
     (*c).x = result.x; (*c).y = result.y; (*c).z = result.z;
 }
+
 
 bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, float** &d) {
     float translate = 0.07;
