@@ -94,9 +94,6 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     }
 
     mtlFile.close();
-//    for (const auto& pair : colourMap) {
-//        std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
-//    }
     return colourMap;
 }
 
@@ -201,20 +198,14 @@ CanvasTriangle randomTriangle() {
    *  @param  c  cameraPosition
    *  @param  v  vertexPosition
    *  @param  f  focalLength
+   *  @param  s  scaling factor
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s) {
     // model coordinate system -> camera coordinate system
-//    std::cout << "original point : " << v.x << ", " << v.y << ", " << v.z << std::endl;
     CanvasPoint r = CanvasPoint(s * -f * ((v.x - c.x)/(v.z - c.z)) + WIDTH/2,
                                 s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2,
                                 1/-(v.z - c.z));
-    //TODO : check if this depth calculation is correct
-
-//    std::cout << "view point : " << r.x - WIDTH/2 << ", " << r.y - HEIGHT/2 << std::endl;
-//    std::cout << "shifted point : " << r.x << ", " << r.y << std::endl;
     return r;
-
-    // original point : 0.973346, 0.962418, 0.980711
 }
 
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour, float** &d){
@@ -240,13 +231,7 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
         if (depth >= d[intX][intY]) {
             window.setPixelColour(intX, intY, colour);
             d[intX][intY] = depth;
-        } else {
-            std::cout << "Rejected point: (" << x << ", " << y << ", " << depth << ", " << colour << ")" << std::endl;
-            std::cout << "Existing point: (" << intX << ", " << intY << ", " << d[intX][intY] << ", " << window.getPixelColour(intX, intY) << ")" << std::endl;
-//            window.setPixelColour(point.x, point.y, Colour(254, 254, 254));
         }
-        //TODO : change the d
-        // only change the pixel value when what we want to draw is in front of the object on same location
     }
 }
 
@@ -474,13 +459,6 @@ int main(int argc, char *argv[]) {
             depthBuffer[i][j] = 0;
         }
     }
-//    for (int i = 0; i < WIDTH; ++i) {
-//        for (int j = 0; j < HEIGHT; ++j) {
-//            std::cout << depthBuffer[i][j] << " ";
-//        }
-//        std::cout << std::endl;
-//    }
-
     objFaceDraw(window, obj, c, f, 150, depthBuffer);
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, depthBuffer);
