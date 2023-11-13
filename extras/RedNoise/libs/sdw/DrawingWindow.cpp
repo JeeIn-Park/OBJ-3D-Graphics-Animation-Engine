@@ -79,12 +79,28 @@ void DrawingWindow::setPixelColour(size_t x, size_t y, Colour colour) {
 	} else pixelBuffer[(y * width) + x] =  (255 << 24) + (colour.red << 16) + (colour.green << 8) + colour.blue;
 }
 
-uint32_t DrawingWindow::getPixelColour(size_t x, size_t y) {
-	if ((x >= width) || (y >= height)) {
-		std::cout << x << "," << y << " not on visible screen area" << std::endl;
-		return -1;
-	} else return pixelBuffer[(y * width) + x];
+//uint32_t DrawingWindow::getPixelColour(size_t x, size_t y) {
+//	if ((x >= width) || (y >= height)) {
+//		std::cout << x << "," << y << " not on visible screen area" << std::endl;
+//		return -1;
+//	} else return pixelBuffer[(y * width) + x];
+//}
+
+Colour DrawingWindow::getPixelColour(size_t x, size_t y) {
+    if ((x >= width) || (y >= height)) {
+        std::cout << x << "," << y << " not on visible screen area" << std::endl;
+        // You can return a default or invalid color here
+        return Colour();
+    } else {
+        uint32_t pixelValue = pixelBuffer[(y * width) + x];
+        Colour color;
+        color.red = (pixelValue >> 16) & 0xFF;
+        color.green = (pixelValue >> 8) & 0xFF;
+        color.blue = pixelValue & 0xFF;
+        return color;
+    }
 }
+
 
 void DrawingWindow::clearPixels() {
 	std::fill(pixelBuffer.begin(), pixelBuffer.end(), 0);

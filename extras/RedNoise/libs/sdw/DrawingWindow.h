@@ -26,7 +26,7 @@ public:
 	void saveBMP(const std::string &filename) const;
 	bool pollForInputEvents(SDL_Event &event);
 	void setPixelColour(size_t x, size_t y, Colour colour);
-	uint32_t getPixelColour(size_t x, size_t y);
+	Colour getPixelColour(size_t x, size_t y);
 	void clearPixels();
 };
 
