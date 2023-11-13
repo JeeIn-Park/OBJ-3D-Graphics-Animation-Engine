@@ -390,22 +390,67 @@ void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
     }
 }
 
-void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s, float** &d) {
+void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 *c, float* f, float s, float** &d) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
-        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
-        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
-        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s);
+        CanvasPoint v1 = getCanvasIntersectionPoint(*c, obj[i].vertices[0], *f, s);
+        CanvasPoint v2 = getCanvasIntersectionPoint(*c, obj[i].vertices[1], *f, s);
+        CanvasPoint v3 = getCanvasIntersectionPoint(*c, obj[i].vertices[2], *f, s);
         filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
     }
 }
 
-bool handleEvent(SDL_Event event, DrawingWindow &window, float** &d) {
+bool handleEvent(SDL_Event event, DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3* c, float* f, float** &d) {
+    float move = 0.03;
+
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
     if (event.type == SDL_KEYDOWN) {
-        if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
-        else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
-        else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
-        else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
+        //left
+        if (event.key.keysym.sym == SDLK_LEFT) {
+            (*c).x =  (*c).x + move;
+            for (int i = 0; i < WIDTH; ++i) {
+                for (int j = 0; j < HEIGHT; ++j) {
+                    d[i][j] = 0;
+                }
+            }
+            window.clearPixels();
+            objFaceDraw(window, obj, c, f, 120, d);
+        }
+
+        //right
+        else if (event.key.keysym.sym == SDLK_RIGHT) {
+            (*c).x =  (*c).x - move;
+            for (int i = 0; i < WIDTH; ++i) {
+                for (int j = 0; j < HEIGHT; ++j) {
+                    d[i][j] = 0;
+                }
+            }
+            window.clearPixels();
+            objFaceDraw(window, obj, c, f, 120, d);
+        }
+
+        //up
+        else if (event.key.keysym.sym == SDLK_UP) {
+            (*c).y =  (*c).y + move;
+            for (int i = 0; i < WIDTH; ++i) {
+                for (int j = 0; j < HEIGHT; ++j) {
+                    d[i][j] = 0;
+                }
+            }
+            window.clearPixels();
+            objFaceDraw(window, obj, c, f, 120, d);
+        }
+
+        //down
+        else if (event.key.keysym.sym == SDLK_DOWN) {
+            (*c).y =  (*c).y - move;
+            for (int i = 0; i < WIDTH; ++i) {
+                for (int j = 0; j < HEIGHT; ++j) {
+                    d[i][j] = 0;
+                }
+            }
+            window.clearPixels();
+            objFaceDraw(window, obj, c, f, 120, d);
+        }
         else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
         else if (event.key.keysym.sym == SDLK_q) return true;
 
@@ -445,8 +490,8 @@ int main(int argc, char *argv[]) {
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
     std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
 
-    glm::vec3 c = glm::vec3 (0.0,0.0,4.0);
-    float f = 2.0;
+    glm::vec3* c = new glm::vec3 (0.0,0.0,4.0);
+    float* f = new float(2.0);
 
     // TODO : study heap/memory allocation
     // TODO : study pointer
@@ -459,9 +504,9 @@ int main(int argc, char *argv[]) {
             depthBuffer[i][j] = 0;
         }
     }
-    objFaceDraw(window, obj, c, f, 150, depthBuffer);
+    objFaceDraw(window, obj, c, f, 120, depthBuffer);
     while (!terminate) {
-        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, depthBuffer);
+        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, obj, c, f, depthBuffer);
         window.renderFrame();
     }
 
@@ -470,4 +515,6 @@ int main(int argc, char *argv[]) {
         delete[] depthBuffer[i];
     }
     delete[] depthBuffer;
+    delete c;
+    delete f;
 }
