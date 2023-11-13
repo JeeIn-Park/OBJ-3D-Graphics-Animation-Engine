@@ -194,6 +194,7 @@ CanvasTriangle randomTriangle() {
     }
 }
 
+
 /**
    *  @param  c  cameraPosition
    *  @param  v  vertexPosition
@@ -201,12 +202,10 @@ CanvasTriangle randomTriangle() {
    *  @param  s  scaling factor
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s) {
-    // model coordinate system -> camera coordinate system
-    CanvasPoint r = CanvasPoint(s * -f * ((v.x - c.x)/(v.z - c.z)) + WIDTH/2,
-                                s * f * ((v.y - c.y)/(v.z - c.z)) + HEIGHT/2,
-                                1/-(v.z - c.z));
-    return r;
+    glm::vec3 r = v - c;
+    return CanvasPoint(s * -f * r.x/r.z + WIDTH/2, s * f * r.y/r.z + HEIGHT/2, 1/-r.z);
 }
+
 
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour, float** &d){
     float xDiff = to.x - from.x;
@@ -228,7 +227,7 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
         int intX = static_cast<int>(x);
         int intY = static_cast<int>(y);
 
-        if (depth >= d[intX][intY]) {
+        if ((intX > 0 && intX < WIDTH && intY > 0 && intY < HEIGHT) && depth >= d[intX][intY]) {
             window.setPixelColour(intX, intY, colour);
             d[intX][intY] = depth;
         }
@@ -391,6 +390,7 @@ void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
 }
 
 void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 *c, float* f, float s, float** &d) {
+    window.clearPixels();
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         CanvasPoint v1 = getCanvasIntersectionPoint(*c, obj[i].vertices[0], *f, s);
         CanvasPoint v2 = getCanvasIntersectionPoint(*c, obj[i].vertices[1], *f, s);
@@ -399,69 +399,64 @@ void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
     }
 }
 
-bool handleEvent(SDL_Event event, DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3* c, float* f, float** &d) {
-    float move = 0.03;
+void rotate(glm::vec3* c, char t){
+    double o = 1.0 * M_PI / 180.0;
+    glm::vec3 result;
+    if (t == 'w'){
+        result = glm::mat3 (
+                1, 0, 0,
+                0, cos(o), sin(o),
+                0, -sin(o), cos(o)
+                ) * *c;
+    }
+    else if (t == 's'){
+        result = glm::mat3 (
+                1, 0, 0,
+                0, cos(-o), sin(-o),
+                0, -sin(-o), cos(-o)
+        ) * *c;
+    }
+    else if (t == 'a'){
+        result = glm::mat3 (
+                cos(o), 0, -sin(o),
+                0, 1, 0,
+                sin(o), 0, cos(o)
+        ) * *c;
+    }
+    else if (t == 'd'){
+        result = glm::mat3 (
+                cos(-o), 0, -sin(-o),
+                0, 1, 0,
+                sin(-o), 0, cos(-o)
+        ) * *c;
+    }
+    (*c).x = result.x; (*c).y = result.y; (*c).z = result.z;
+}
+
+bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, float** &d) {
+    float translate = 0.07;
 
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
     if (event.type == SDL_KEYDOWN) {
-        //left
-        if (event.key.keysym.sym == SDLK_LEFT) {
-            (*c).x =  (*c).x + move;
-            for (int i = 0; i < WIDTH; ++i) {
-                for (int j = 0; j < HEIGHT; ++j) {
-                    d[i][j] = 0;
-                }
-            }
-            window.clearPixels();
-            objFaceDraw(window, obj, c, f, 120, d);
-        }
+        // translate
+        if (event.key.keysym.sym == SDLK_LEFT) {(*c).x =  (*c).x + translate;}
+        else if (event.key.keysym.sym == SDLK_RIGHT) {(*c).x =  (*c).x - translate;}
+        else if (event.key.keysym.sym == SDLK_UP) {(*c).y =  (*c).y + translate;}
+        else if (event.key.keysym.sym == SDLK_DOWN) {(*c).y =  (*c).y - translate;}
+        else if (event.key.keysym.sym == SDLK_KP_MINUS) {(*c).z =  (*c).z + translate;}
+        else if (event.key.keysym.sym == SDLK_KP_PLUS) {(*c).z =  (*c).z - translate;}
 
-        //right
-        else if (event.key.keysym.sym == SDLK_RIGHT) {
-            (*c).x =  (*c).x - move;
-            for (int i = 0; i < WIDTH; ++i) {
-                for (int j = 0; j < HEIGHT; ++j) {
-                    d[i][j] = 0;
-                }
-            }
-            window.clearPixels();
-            objFaceDraw(window, obj, c, f, 120, d);
-        }
+        //rotate
+        else if (event.key.keysym.sym == SDLK_a) rotate(c, 'a');
+        else if (event.key.keysym.sym == SDLK_d) rotate(c, 'd');
+        else if (event.key.keysym.sym == SDLK_w) rotate(c, 'w');
+        else if (event.key.keysym.sym == SDLK_s) rotate(c, 's');
 
-        //up
-        else if (event.key.keysym.sym == SDLK_UP) {
-            (*c).y =  (*c).y + move;
-            for (int i = 0; i < WIDTH; ++i) {
-                for (int j = 0; j < HEIGHT; ++j) {
-                    d[i][j] = 0;
-                }
-            }
-            window.clearPixels();
-            objFaceDraw(window, obj, c, f, 120, d);
-        }
-
-        //down
-        else if (event.key.keysym.sym == SDLK_DOWN) {
-            (*c).y =  (*c).y - move;
-            for (int i = 0; i < WIDTH; ++i) {
-                for (int j = 0; j < HEIGHT; ++j) {
-                    d[i][j] = 0;
-                }
-            }
-            window.clearPixels();
-            objFaceDraw(window, obj, c, f, 120, d);
-        }
-        else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
+//        else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
         else if (event.key.keysym.sym == SDLK_q) return true;
 
-        else if (event.key.keysym.sym == SDLK_u) {
-            strokedTriangleDraw(window, randomTriangle(), colour, d);
-        }
-
-        else if (event.key.keysym.sym == SDLK_f) {
-            filledTriangleDraw(window, randomTriangle(), colour, d);
-        }
-
+        else if (event.key.keysym.sym == SDLK_u) {strokedTriangleDraw(window, randomTriangle(), colour, d);}
+        else if (event.key.keysym.sym == SDLK_f) {filledTriangleDraw(window, randomTriangle(), colour, d);}
         else if (event.key.keysym.sym == SDLK_t) {
             CanvasPoint v0 = CanvasPoint(160, 10);
             CanvasPoint v1 = CanvasPoint(300, 230);
@@ -470,14 +465,12 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, std::vector<ModelTriang
             v1.texturePoint = TexturePoint(395, 380);
             v2.texturePoint = TexturePoint(65, 330);
             texturedTriangleDraw(window, CanvasTriangle(v0, v1, v2), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm", d);
-
         }
 
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
         window.savePPM("output.ppm");
         window.saveBMP("output.bmp");
     }
-
     return false;
 }
 
@@ -499,14 +492,19 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < WIDTH; ++i) {
         depthBuffer[i] = new float [HEIGHT];
     }
-    for (int i = 0; i < WIDTH; ++i) {
-        for (int j = 0; j < HEIGHT; ++j) {
-            depthBuffer[i][j] = 0;
-        }
-    }
-    objFaceDraw(window, obj, c, f, 120, depthBuffer);
+//    for (int i = 0; i < WIDTH; ++i) {
+//        for (int j = 0; j < HEIGHT; ++j) {
+//            depthBuffer[i][j] = 0;
+//        }
+//    }
     while (!terminate) {
-        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, obj, c, f, depthBuffer);
+        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, c, depthBuffer);
+        for (int i = 0; i < WIDTH; ++i) {
+            for (int j = 0; j < HEIGHT; ++j) {
+                depthBuffer[i][j] = 0;
+            }
+        }
+        objFaceDraw(window, obj, c, f, 120, depthBuffer);
         window.renderFrame();
     }
 
