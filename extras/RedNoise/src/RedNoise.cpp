@@ -13,6 +13,9 @@
 #include <unordered_map>
 #include <sstream>
 
+//TODO : going to delete this, only for the test
+#include <thread>
+
 #define WIDTH 320
 #define HEIGHT 240
 
@@ -205,7 +208,7 @@ CanvasTriangle randomTriangle() {
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s) {
     glm::vec3 r = v - c;
-    return CanvasPoint(s * -f * r.x/r.z + WIDTH/2, s * f * r.y/r.z + HEIGHT/2, 1/-r.z);
+    return CanvasPoint(s/2 * -f * r.x/r.z + WIDTH/2, s/2 * f * r.y/r.z + HEIGHT/2, 1/-r.z);
 }
 
 
@@ -362,7 +365,6 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
     TexturePoint tp0 = p0.texturePoint, tp2 = p2.texturePoint;
     CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
     float t = (pk.x - p0.x) / (p2.x - p0.x);
-    pk.texturePoint.x = tp0.x + t * (tp2.x - tp0.x);
     pk.texturePoint.y = tp0.y + t * (tp2.y - tp0.y);
 
 
@@ -493,12 +495,12 @@ int main(int argc, char *argv[]) {
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
     std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
 
-    glm::vec3* c = new glm::vec3 (0.0,0.0,4.0);
+    glm::vec3* cameraToVertex = new glm::vec3 (0.0, 0.0, 4.0);
     float* f = new float(2.0);
 
     // TODO : study heap/memory allocation
     // TODO : study pointer
-    float ** depthBuffer = new float*[WIDTH];
+    float** depthBuffer = new float*[WIDTH];
     for (int i = 0; i < WIDTH; ++i) {
         depthBuffer[i] = new float [HEIGHT];
     }
@@ -507,22 +509,43 @@ int main(int argc, char *argv[]) {
 //            depthBuffer[i][j] = 0;
 //        }
 //    }
+
+    glm::mat3* cameraOrientation = new glm::mat3(
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+            );
+    glm::vec3* adjustedVector = new glm::vec3;
+    *adjustedVector = *cameraToVertex * *cameraOrientation;
+    double o = 1.0 * M_PI / 180.0;
+
     while (!terminate) {
-        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, c, depthBuffer);
+        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, adjustedVector, depthBuffer);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         for (int i = 0; i < WIDTH; ++i) {
             for (int j = 0; j < HEIGHT; ++j) {
                 depthBuffer[i][j] = 0;
             }
         }
-        objFaceDraw(window, obj, c, f, 120, depthBuffer);
+        *cameraOrientation = glm::mat3 (
+                1, 0, 0,
+                0, cos(o), sin(o),
+                0, -sin(o), cos(o)
+        ) * *cameraOrientation;
+        *adjustedVector = *cameraToVertex * *cameraOrientation;
+        objFaceDraw(window, obj, adjustedVector, f, 240, depthBuffer);
         window.renderFrame();
     }
+
+
 
     // TODO : study memory de-allocation
     for (int i = 0; i < WIDTH; ++i) {
         delete[] depthBuffer[i];
     }
     delete[] depthBuffer;
-    delete c;
+    delete cameraToVertex;
     delete f;
+    delete cameraOrientation;
+    delete adjustedVector;
 }
