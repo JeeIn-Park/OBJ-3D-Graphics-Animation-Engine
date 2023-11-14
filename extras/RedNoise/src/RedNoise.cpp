@@ -206,8 +206,8 @@ CanvasTriangle randomTriangle() {
    *  @param  f  focalLength
    *  @param  s  scaling factor
   */
-CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::vec3 v, float f, float s) {
-    glm::vec3 r = v - c;
+CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s) {
+    glm::vec3 r = o * (v - c);
     return CanvasPoint(s/2 * -f * r.x/r.z + WIDTH/2, s/2 * f * r.y/r.z + HEIGHT/2, 1/-r.z);
 }
 
@@ -376,11 +376,11 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
 }
 
 
-void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s) {
+void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, glm::mat3 o, float f, float s) {
     CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
         for (int ii = 0; ii < 3; ++ ii){
-            v = getCanvasIntersectionPoint(c, obj[i].vertices[ii], f, s);
+            v = getCanvasIntersectionPoint(c, o, obj[i].vertices[ii], f, s);
             std::cout << v << std::endl;
             window.setPixelColour(v.x, v.y, obj[i].colour);
             std::cout << obj[i].colour << std::endl;
@@ -389,63 +389,89 @@ void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm:
 }
 
 
-void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, float f, float s, float** &d) {
+void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, glm::mat3 o, float f, float s, float** &d) {
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
-        CanvasPoint v1 = getCanvasIntersectionPoint(c, obj[i].vertices[0], f, s);
-        CanvasPoint v2 = getCanvasIntersectionPoint(c, obj[i].vertices[1], f, s);
-        CanvasPoint v3 = getCanvasIntersectionPoint(c, obj[i].vertices[2], f, s);
+        CanvasPoint v1 = getCanvasIntersectionPoint(c, o, obj[i].vertices[0], f, s);
+        CanvasPoint v2 = getCanvasIntersectionPoint(c, o, obj[i].vertices[1], f, s);
+        CanvasPoint v3 = getCanvasIntersectionPoint(c, o, obj[i].vertices[2], f, s);
         strokedTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
     }
 }
 
 
-void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 *c, float* f, float s, float** &d) {
+void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 *c, glm::mat3* o, float* f, float s, float** &d) {
     window.clearPixels();
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
-        CanvasPoint v1 = getCanvasIntersectionPoint(*c, obj[i].vertices[0], *f, s);
-        CanvasPoint v2 = getCanvasIntersectionPoint(*c, obj[i].vertices[1], *f, s);
-        CanvasPoint v3 = getCanvasIntersectionPoint(*c, obj[i].vertices[2], *f, s);
+        CanvasPoint v1 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[0], *f, s);
+        CanvasPoint v2 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[1], *f, s);
+        CanvasPoint v3 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[2], *f, s);
         filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
     }
 }
 
 
-void rotate(glm::vec3* c, char t){
-    double o = 1.0 * M_PI / 180.0;
-    glm::vec3 result;
+void rotate(glm::vec3* c, glm::mat3* o, char t){
+    double angle = 1.0 * M_PI / 180.0;
     if (t == 'a'){
-        result = glm::mat3 (
-                cos(o), 0, -sin(o),
+        glm::mat3 rotationMatrix = glm::mat3 (
+                cos(angle), 0, -sin(angle),
                 0, 1, 0,
-                sin(o), 0, cos(o)
-        ) * *c;
+                sin(angle), 0, cos(angle)
+        );
+        *c = rotationMatrix * *c;
+        rotationMatrix =glm::mat3 (
+                cos(-angle), 0, -sin(-angle),
+                0, 1, 0,
+                sin(-angle), 0, cos(-angle)
+        );
+        *o = rotationMatrix * *o;
     }
     else if (t == 'd'){
-        result = glm::mat3 (
-                cos(-o), 0, -sin(-o),
+        glm::mat3 rotationMatrix =glm::mat3 (
+                cos(-angle), 0, -sin(-angle),
                 0, 1, 0,
-                sin(-o), 0, cos(-o)
-        ) * *c;
+                sin(-angle), 0, cos(-angle)
+        );
+        *c = rotationMatrix * *c;
+        rotationMatrix = glm::mat3 (
+                cos(angle), 0, -sin(angle),
+                0, 1, 0,
+                sin(angle), 0, cos(angle)
+        );
+        *o = rotationMatrix * *o;
     }
     else if (t == 'w'){
-        result = glm::mat3 (
+        glm::mat3 rotationMatrix = glm::mat3 (
                 1, 0, 0,
-                0, cos(o), sin(o),
-                0, -sin(o), cos(o)
-        ) * *c;
+                0, cos(angle), sin(angle),
+                0, -sin(angle), cos(angle)
+        );
+        *c = rotationMatrix * *c;
+        rotationMatrix = glm::mat3 (
+                1, 0, 0,
+                0, cos(-angle), sin(-angle),
+                0, -sin(-angle), cos(-angle)
+        );
+        *o = rotationMatrix * *o;
     }
     else if (t == 's'){
-        result = glm::mat3 (
+        glm::mat3 rotationMatrix = glm::mat3 (
                 1, 0, 0,
-                0, cos(-o), sin(-o),
-                0, -sin(-o), cos(-o)
-        ) * *c;
+                0, cos(-angle), sin(-angle),
+                0, -sin(-angle), cos(-angle)
+        );
+        *c = rotationMatrix * *c;
+        rotationMatrix = glm::mat3 (
+                1, 0, 0,
+                0, cos(angle), sin(angle),
+                0, -sin(angle), cos(angle)
+        );
+        *o = rotationMatrix * *o;
     }
-    (*c).x = result.x; (*c).y = result.y; (*c).z = result.z;
 }
 
 
-bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, float** &d) {
+bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3* o, float** &d) {
     float translate = 0.07;
 
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
@@ -459,10 +485,10 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, float** &
         else if (event.key.keysym.sym == SDLK_KP_PLUS) {(*c).z =  (*c).z - translate;}
 
             //rotate
-        else if (event.key.keysym.sym == SDLK_a) rotate(c, 'a');
-        else if (event.key.keysym.sym == SDLK_d) rotate(c, 'd');
-        else if (event.key.keysym.sym == SDLK_w) rotate(c, 'w');
-        else if (event.key.keysym.sym == SDLK_s) rotate(c, 's');
+        else if (event.key.keysym.sym == SDLK_a) rotate(c, o, 'a');
+        else if (event.key.keysym.sym == SDLK_d) rotate(c, o,'d');
+        else if (event.key.keysym.sym == SDLK_w) rotate(c, o,'w');
+        else if (event.key.keysym.sym == SDLK_s) rotate(c, o,'s');
 
 //        else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
         else if (event.key.keysym.sym == SDLK_q) return true;
@@ -515,25 +541,25 @@ int main(int argc, char *argv[]) {
             0, 1, 0,
             0, 0, 1
     );
-    glm::vec3* adjustedVector = new glm::vec3;
-    *adjustedVector = *cameraToVertex * *cameraOrientation;
+//    glm::vec3* adjustedVector = new glm::vec3;
+//    *adjustedVector = *cameraToVertex * *cameraOrientation;
     double o = 1.0 * M_PI / 180.0;
 
     while (!terminate) {
-        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, adjustedVector, depthBuffer);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer);
+//        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         for (int i = 0; i < WIDTH; ++i) {
             for (int j = 0; j < HEIGHT; ++j) {
                 depthBuffer[i][j] = 0;
             }
         }
-        *cameraOrientation = glm::mat3 (
-                1, 0, 0,
-                0, cos(o), sin(o),
-                0, -sin(o), cos(o)
-        ) * *cameraOrientation;
-        *adjustedVector = *cameraToVertex * *cameraOrientation;
-        objFaceDraw(window, obj, adjustedVector, f, 240, depthBuffer);
+//        *cameraOrientation = glm::mat3 (
+//                1, 0, 0,
+//                0, cos(o), sin(o),
+//                0, -sin(o), cos(o)
+//        ) * *cameraOrientation;
+//        *adjustedVector = *cameraToVertex * *cameraOrientation;
+        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer);
         window.renderFrame();
     }
 
@@ -547,5 +573,5 @@ int main(int argc, char *argv[]) {
     delete cameraToVertex;
     delete f;
     delete cameraOrientation;
-    delete adjustedVector;
+//    delete adjustedVector;
 }
