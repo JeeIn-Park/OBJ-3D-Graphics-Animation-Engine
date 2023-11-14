@@ -410,7 +410,7 @@ void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
 }
 
 
-void rotate(glm::vec3* c, glm::mat3* o, char t){
+void rotate(glm::vec3* c, char t){
     double angle = 1.0 * M_PI / 180.0;
     if (t == 'a'){
         glm::mat3 rotationMatrix = glm::mat3 (
@@ -419,12 +419,6 @@ void rotate(glm::vec3* c, glm::mat3* o, char t){
                 sin(angle), 0, cos(angle)
         );
         *c = rotationMatrix * *c;
-        rotationMatrix =glm::mat3 (
-                cos(-angle), 0, -sin(-angle),
-                0, 1, 0,
-                sin(-angle), 0, cos(-angle)
-        );
-        *o = rotationMatrix * *o;
     }
     else if (t == 'd'){
         glm::mat3 rotationMatrix =glm::mat3 (
@@ -433,12 +427,6 @@ void rotate(glm::vec3* c, glm::mat3* o, char t){
                 sin(-angle), 0, cos(-angle)
         );
         *c = rotationMatrix * *c;
-        rotationMatrix = glm::mat3 (
-                cos(angle), 0, -sin(angle),
-                0, 1, 0,
-                sin(angle), 0, cos(angle)
-        );
-        *o = rotationMatrix * *o;
     }
     else if (t == 'w'){
         glm::mat3 rotationMatrix = glm::mat3 (
@@ -447,12 +435,6 @@ void rotate(glm::vec3* c, glm::mat3* o, char t){
                 0, -sin(angle), cos(angle)
         );
         *c = rotationMatrix * *c;
-        rotationMatrix = glm::mat3 (
-                1, 0, 0,
-                0, cos(-angle), sin(-angle),
-                0, -sin(-angle), cos(-angle)
-        );
-        *o = rotationMatrix * *o;
     }
     else if (t == 's'){
         glm::mat3 rotationMatrix = glm::mat3 (
@@ -461,7 +443,37 @@ void rotate(glm::vec3* c, glm::mat3* o, char t){
                 0, -sin(-angle), cos(-angle)
         );
         *c = rotationMatrix * *c;
-        rotationMatrix = glm::mat3 (
+    }
+}
+
+void orientRotate(glm::mat3* o, char t) {
+    double angle = 1.0 * M_PI / 180.0;
+    if (t == '1'){
+        glm::mat3 rotationMatrix = glm::mat3 (
+                cos(-angle), 0, -sin(-angle),
+                0, 1, 0,
+                sin(-angle), 0, cos(-angle)
+        );
+        *o = rotationMatrix * *o;
+    }
+    else if (t == '3'){
+        glm::mat3 rotationMatrix =glm::mat3 (
+                cos(angle), 0, -sin(angle),
+                0, 1, 0,
+                sin(angle), 0, cos(angle)
+        );
+        *o = rotationMatrix * *o;
+    }
+    else if (t == '5'){
+        glm::mat3 rotationMatrix = glm::mat3 (
+                1, 0, 0,
+                0, cos(-angle), sin(-angle),
+                0, -sin(-angle), cos(-angle)
+        );
+        *o = rotationMatrix * *o;
+    }
+    else if (t == '2'){
+        glm::mat3 rotationMatrix = glm::mat3 (
                 1, 0, 0,
                 0, cos(angle), sin(angle),
                 0, -sin(angle), cos(angle)
@@ -484,13 +496,18 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         else if (event.key.keysym.sym == SDLK_KP_MINUS) {(*c).z =  (*c).z + translate;}
         else if (event.key.keysym.sym == SDLK_KP_PLUS) {(*c).z =  (*c).z - translate;}
 
-            //rotate
-        else if (event.key.keysym.sym == SDLK_a) rotate(c, o, 'a');
-        else if (event.key.keysym.sym == SDLK_d) rotate(c, o,'d');
-        else if (event.key.keysym.sym == SDLK_w) rotate(c, o,'w');
-        else if (event.key.keysym.sym == SDLK_s) rotate(c, o,'s');
+        //rotate
+        else if (event.key.keysym.sym == SDLK_a) rotate(c,'a');
+        else if (event.key.keysym.sym == SDLK_d) rotate(c,'d');
+        else if (event.key.keysym.sym == SDLK_w) rotate(c,'w');
+        else if (event.key.keysym.sym == SDLK_s) rotate(c,'s');
 
-//        else if (event.key.keysym.sym == SDLK_c) window.clearPixels();
+        //orientation
+        else if (event.key.keysym.sym == SDLK_KP_1) { orientRotate(o, '1');}
+        else if (event.key.keysym.sym == SDLK_KP_3) { orientRotate(o, '3');}
+        else if (event.key.keysym.sym == SDLK_KP_5) { orientRotate(o, '5');}
+        else if (event.key.keysym.sym == SDLK_KP_2) { orientRotate(o, '2');}
+
         else if (event.key.keysym.sym == SDLK_q) return true;
 
         else if (event.key.keysym.sym == SDLK_u) {strokedTriangleDraw(window, randomTriangle(), colour, d);}
@@ -530,35 +547,25 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < WIDTH; ++i) {
         depthBuffer[i] = new float [HEIGHT];
     }
-//    for (int i = 0; i < WIDTH; ++i) {
-//        for (int j = 0; j < HEIGHT; ++j) {
-//            depthBuffer[i][j] = 0;
-//        }
-//    }
+    for (int i = 0; i < WIDTH; ++i) {
+        for (int j = 0; j < HEIGHT; ++j) {
+            depthBuffer[i][j] = 0;
+        }
+    }
 
     glm::mat3* cameraOrientation = new glm::mat3(
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
     );
-//    glm::vec3* adjustedVector = new glm::vec3;
-//    *adjustedVector = *cameraToVertex * *cameraOrientation;
-    double o = 1.0 * M_PI / 180.0;
 
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer);
-//        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         for (int i = 0; i < WIDTH; ++i) {
             for (int j = 0; j < HEIGHT; ++j) {
                 depthBuffer[i][j] = 0;
             }
         }
-//        *cameraOrientation = glm::mat3 (
-//                1, 0, 0,
-//                0, cos(o), sin(o),
-//                0, -sin(o), cos(o)
-//        ) * *cameraOrientation;
-//        *adjustedVector = *cameraToVertex * *cameraOrientation;
         objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer);
         window.renderFrame();
     }
@@ -573,5 +580,4 @@ int main(int argc, char *argv[]) {
     delete cameraToVertex;
     delete f;
     delete cameraOrientation;
-//    delete adjustedVector;
 }
