@@ -449,14 +449,6 @@ void rotate(glm::vec3* c, char t){
 void orientRotate(glm::mat3* o, char t) {
     double angle = 1.0 * M_PI / 180.0;
     if (t == '1'){
-        glm::mat3 rotationMatrix = glm::mat3 (
-                cos(-angle), 0, -sin(-angle),
-                0, 1, 0,
-                sin(-angle), 0, cos(-angle)
-        );
-        *o = rotationMatrix * *o;
-    }
-    else if (t == '3'){
         glm::mat3 rotationMatrix =glm::mat3 (
                 cos(angle), 0, -sin(angle),
                 0, 1, 0,
@@ -464,19 +456,27 @@ void orientRotate(glm::mat3* o, char t) {
         );
         *o = rotationMatrix * *o;
     }
+    else if (t == '3'){
+        glm::mat3 rotationMatrix = glm::mat3 (
+                cos(-angle), 0, -sin(-angle),
+                0, 1, 0,
+                sin(-angle), 0, cos(-angle)
+        );
+        *o = rotationMatrix * *o;
+    }
     else if (t == '5'){
         glm::mat3 rotationMatrix = glm::mat3 (
                 1, 0, 0,
-                0, cos(-angle), sin(-angle),
-                0, -sin(-angle), cos(-angle)
+                0, cos(angle), sin(angle),
+                0, -sin(angle), cos(angle)
         );
         *o = rotationMatrix * *o;
     }
     else if (t == '2'){
         glm::mat3 rotationMatrix = glm::mat3 (
                 1, 0, 0,
-                0, cos(angle), sin(angle),
-                0, -sin(angle), cos(angle)
+                0, cos(-angle), sin(-angle),
+                0, -sin(-angle), cos(-angle)
         );
         *o = rotationMatrix * *o;
     }
@@ -491,8 +491,8 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         // translate
         if (event.key.keysym.sym == SDLK_LEFT) {(*c).x =  (*c).x + translate;}
         else if (event.key.keysym.sym == SDLK_RIGHT) {(*c).x =  (*c).x - translate;}
-        else if (event.key.keysym.sym == SDLK_UP) {(*c).y =  (*c).y + translate;}
-        else if (event.key.keysym.sym == SDLK_DOWN) {(*c).y =  (*c).y - translate;}
+        else if (event.key.keysym.sym == SDLK_UP) {(*c).y =  (*c).y - translate;}
+        else if (event.key.keysym.sym == SDLK_DOWN) {(*c).y =  (*c).y + translate;}
         else if (event.key.keysym.sym == SDLK_KP_MINUS) {(*c).z =  (*c).z + translate;}
         else if (event.key.keysym.sym == SDLK_KP_PLUS) {(*c).z =  (*c).z - translate;}
 
