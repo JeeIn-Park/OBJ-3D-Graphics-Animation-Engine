@@ -482,6 +482,10 @@ void orientRotate(glm::mat3* o, char t) {
     }
 }
 
+void orbit(glm::vec3* c){
+    rotate(c, 'd');
+}
+
 
 bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3* o, float** &d) {
     float translate = 0.07;
@@ -566,6 +570,8 @@ int main(int argc, char *argv[]) {
                 depthBuffer[i][j] = 0;
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        orbit(cameraToVertex);
         objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer);
         window.renderFrame();
     }
