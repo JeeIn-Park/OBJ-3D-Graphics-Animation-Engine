@@ -482,12 +482,6 @@ void orientRotate(glm::mat3* o, char t) {
     }
 }
 
-//void orbit(glm::vec3* c){
-//    double angle = 1.0 * M_PI / 180.0;
-//    (*c).x = (*c).x * cos(angle) + (*c).z * sin(angle);
-//    (*c).z = -(*c).x * sin(angle) + (*c).z * cos(angle);
-//}
-
 void orbit(glm::vec3* c){
     rotate(c, 'd');
 }
@@ -495,12 +489,10 @@ void orbit(glm::vec3* c){
 void lookAt(glm::vec3* c, glm::mat3* o){
     glm::vec3 right = glm::vec3((*o)[0][0], (*o)[1][0], (*o)[2][0]);
     glm::vec3 up = glm::vec3((*o)[0][1], (*o)[1][1], (*o)[2][1]);
-//    glm::vec3 forward = glm::vec3((*o)[0][2], (*o)[1][2], (*o)[2][2]);
     glm::vec3 forward = glm::normalize(*c);
     right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), forward));
     up = glm::normalize(glm::cross(forward, right));
 
-//    *o = glm::mat3(right, up, forward);
     (*o)[0][0] =   right.x; (*o)[1][0] = right.y;   (*o)[2][0] = right.z;
     (*o)[0][1] =      up.x; (*o)[1][1] = up.y;      (*o)[2][1] = up.z;
     (*o)[0][2] = forward.x; (*o)[1][2] = forward.y; (*o)[2][2] = forward.z;
@@ -513,10 +505,10 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
     if (event.type == SDL_KEYDOWN) {
         // translate
-        if (event.key.keysym.sym == SDLK_LEFT) {(*c).x =  (*c).x + translate;}
-        else if (event.key.keysym.sym == SDLK_RIGHT) {(*c).x =  (*c).x - translate;}
-        else if (event.key.keysym.sym == SDLK_UP) {(*c).y =  (*c).y - translate;}
-        else if (event.key.keysym.sym == SDLK_DOWN) {(*c).y =  (*c).y + translate;}
+        if (event.key.keysym.sym == SDLK_LEFT) {(*c).x =  (*c).x - translate;}
+        else if (event.key.keysym.sym == SDLK_RIGHT) {(*c).x =  (*c).x + translate;}
+        else if (event.key.keysym.sym == SDLK_UP) {(*c).y =  (*c).y + translate;}
+        else if (event.key.keysym.sym == SDLK_DOWN) {(*c).y =  (*c).y - translate;}
         else if (event.key.keysym.sym == SDLK_KP_MINUS) {(*c).z =  (*c).z + translate;}
         else if (event.key.keysym.sym == SDLK_KP_PLUS) {(*c).z =  (*c).z - translate;}
 
@@ -595,8 +587,8 @@ int main(int argc, char *argv[]) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         if (!*pause){
             orbit(cameraToVertex);
-            lookAt(cameraToVertex, cameraOrientation);
         }
+        lookAt(cameraToVertex, cameraOrientation);
         objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer);
         window.renderFrame();
     }
