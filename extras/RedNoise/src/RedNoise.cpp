@@ -482,12 +482,32 @@ void orientRotate(glm::mat3* o, char t) {
     }
 }
 
+//void orbit(glm::vec3* c){
+//    double angle = 1.0 * M_PI / 180.0;
+//    (*c).x = (*c).x * cos(angle) + (*c).z * sin(angle);
+//    (*c).z = -(*c).x * sin(angle) + (*c).z * cos(angle);
+//}
+
 void orbit(glm::vec3* c){
     rotate(c, 'd');
 }
 
+void lookAt(glm::vec3* c, glm::mat3* o){
+    glm::vec3 right = glm::vec3((*o)[0][0], (*o)[1][0], (*o)[2][0]);
+    glm::vec3 up = glm::vec3((*o)[0][1], (*o)[1][1], (*o)[2][1]);
+//    glm::vec3 forward = glm::vec3((*o)[0][2], (*o)[1][2], (*o)[2][2]);
+    glm::vec3 forward = glm::normalize(*c);
+    right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), forward));
+    up = glm::normalize(glm::cross(forward, right));
 
-bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3* o, float** &d) {
+//    *o = glm::mat3(right, up, forward);
+    (*o)[0][0] =   right.x; (*o)[1][0] = right.y;   (*o)[2][0] = right.z;
+    (*o)[0][1] =      up.x; (*o)[1][1] = up.y;      (*o)[2][1] = up.z;
+    (*o)[0][2] = forward.x; (*o)[1][2] = forward.y; (*o)[2][2] = forward.z;
+}
+
+
+bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3* o, float** &d, bool* &p) {
     float translate = 0.07;
 
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
@@ -513,6 +533,7 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         else if (event.key.keysym.sym == SDLK_KP_2) { orientRotate(o, '2');}
 
         else if (event.key.keysym.sym == SDLK_q) return true;
+        else if (event.key.keysym.sym == SDLK_SPACE) *p = !*p;
 
         else if (event.key.keysym.sym == SDLK_u) {strokedTriangleDraw(window, randomTriangle(), colour, d);}
         else if (event.key.keysym.sym == SDLK_f) {filledTriangleDraw(window, randomTriangle(), colour, d);}
@@ -538,6 +559,7 @@ int main(int argc, char *argv[]) {
     DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
     SDL_Event event;
     bool terminate = false;
+    bool* pause = new bool(false);
 
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
     std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
@@ -564,14 +586,17 @@ int main(int argc, char *argv[]) {
     );
 
     while (!terminate) {
-        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer);
+        if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer, pause);
         for (int i = 0; i < WIDTH; ++i) {
             for (int j = 0; j < HEIGHT; ++j) {
                 depthBuffer[i][j] = 0;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        orbit(cameraToVertex);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (!*pause){
+            orbit(cameraToVertex);
+            lookAt(cameraToVertex, cameraOrientation);
+        }
         objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer);
         window.renderFrame();
     }
@@ -586,4 +611,5 @@ int main(int argc, char *argv[]) {
     delete cameraToVertex;
     delete f;
     delete cameraOrientation;
+    delete pause;
 }
