@@ -8,6 +8,7 @@
 #include <TextureMap.h>
 #include <TexturePoint.h>
 #include <ModelTriangle.h>
+#include <RayTriangleIntersection.h>
 
 // TODO : check if it's allowed to use this library
 #include <unordered_map>
@@ -496,6 +497,34 @@ void lookAt(glm::vec3* c, glm::mat3* o){
     (*o)[0][0] =   right.x; (*o)[1][0] = right.y;   (*o)[2][0] = right.z;
     (*o)[0][1] =      up.x; (*o)[1][1] = up.y;      (*o)[2][1] = up.z;
     (*o)[0][2] = forward.x; (*o)[1][2] = forward.y; (*o)[2][2] = forward.z;
+}
+
+
+/**
+   *  @param  c  camera position
+   *  @param  direction  ray direction
+  */
+RayTriangleIntersection getClosestIntersection(glm::vec3 c, glm::vec3 direction, std::vector<ModelTriangle> obj) {
+    // search through the all the triangles in the current scene and return details of the closest intersected triangle
+    // (if indeed there is an intersection)
+    RayTriangleIntersection closestIntersection;
+    for (size_t i = 0; i < obj.size(); ++i) {
+        ModelTriangle triangle = obj[i];
+        glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
+        glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
+        glm::vec3 SPVector = c - triangle.vertices[0];
+        glm::mat3 DEMatrix(-direction, e0, e1);
+        glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+
+        if (possibleSolution.x >= 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
+                && possibleSolution.x <= closestIntersection.distanceFromCamera
+                && possibleSolution.y <= glm::length(e0) && possibleSolution.z <= glm::length(e1)) {
+
+            closestIntersection = RayTriangleIntersection(c + possibleSolution.x * direction, possibleSolution.x, triangle, i);
+        }
+    }
+
+    return closestIntersection;
 }
 
 
