@@ -97,7 +97,21 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
         }
 
         else if (token == "map_Kd") {
-            // TODO : store it somewhere so I can use multiple texture as well
+            // TODO : store what texture is used for this colour
+            // TODO : study this code bit
+            // Check if the key exists in the map
+            auto it = colourMap.find(colourName);
+            if (it != colourMap.end()) {
+                // Get the value corresponding to the key
+                Colour old_value = it->second;
+                // Define new key and value
+                std::string new_key;
+                iss >> new_key;
+                // Remove the old key-value pair
+                colourMap.erase(it);
+                // Update the map with the new key-value pair
+                colourMap[new_key] = Colour(255, 255, 255);
+            }
         }
 
     }
@@ -182,7 +196,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                     for (size_t j = 0; j < textures.size(); ++j){
                         if (textures[j].z == vertexIndices[i]){
                             triangle.texturePoints[i] = TexturePoint(textures[j].x, textures[j].y);
-                            std::cout << "texture assigned" << std::endl;
+//                            std::cout << "texture assigned" << std::endl;
                         }
                     }
                 }
@@ -450,7 +464,11 @@ void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
         CanvasPoint v1 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[0], *f, s);
         CanvasPoint v2 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[1], *f, s);
         CanvasPoint v3 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[2], *f, s);
-        filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
+        if (!obj[i].texturePoints.empty()){
+            filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
+        } else {
+//            texturedTriangleDraw(window, CanvasTriangle(v1, v2, v3), );
+        }
     }
 }
 
