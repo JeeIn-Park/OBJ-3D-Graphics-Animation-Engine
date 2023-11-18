@@ -85,7 +85,7 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
         }
 
         // Kd - RGB value
-        if (token == "Kd") {
+        else if (token == "Kd") {
             std::array<float, 3> rgb;
             iss >> rgb[0] >> rgb[1] >> rgb[2];
 //            std::cout << "RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << std::endl;
@@ -94,6 +94,10 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
                 colourMap[colourName] = Colour(255 * rgb[0], 255 * rgb[1], 255 * rgb[2]);
             }
 
+        }
+
+        else if (token == "map_Kd") {
+            // TODO : store it somewhere so I can use multiple texture as well
         }
 
     }
@@ -148,11 +152,15 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             texture.z = vertices.size() - (vertexSetSize-1);
             textures.push_back(texture);
             vertexSetSize = vertexSetSize - 1;
+//            std::cout << vertices.size() << std::endl;
+//            std::cout << vertexSetSize << std::endl;
+//            std::cout << texture.z << std::endl;
         }
 
 
             // f - face
         else if (token == "f") {
+            vertexSetSize = 0;
             std::string vertex;
             std::array<int, 3> vertexIndices;
 
@@ -174,7 +182,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                     for (size_t j = 0; j < textures.size(); ++j){
                         if (textures[j].z == vertexIndices[i]){
                             triangle.texturePoints[i] = TexturePoint(textures[j].x, textures[j].y);
-                            std::cout << "texture assigned : " << triangle.texturePoints[i] << std::endl;
+                            std::cout << "texture assigned" << std::endl;
                         }
                     }
                 }
