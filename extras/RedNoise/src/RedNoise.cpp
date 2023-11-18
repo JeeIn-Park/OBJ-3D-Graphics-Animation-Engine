@@ -106,6 +106,8 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
 std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
     std::vector<ModelTriangle> triangles;
     std::vector<glm::vec3> vertices;
+    int vertexSetSize = 0;
+    std::vector<glm::vec3> textures;
     Colour currentColour;
 
     std::string line;
@@ -135,7 +137,19 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             glm::vec3 vertex;
             iss >> vertex.x >> vertex.y >> vertex.z;
             vertices.push_back(glm::vec3(s * vertex.x, s * vertex.y, s * vertex.z));
+            vertexSetSize = vertexSetSize + 1;
         }
+
+
+            // vt - texture
+        else if (token == "vt") {
+            glm::vec3 texture;
+            iss >> texture.x >> texture.y;
+            texture.z = vertices.size() - (vertexSetSize-1);
+            textures.push_back(texture);
+            vertexSetSize = vertexSetSize - 1;
+        }
+
 
             // f - face
         else if (token == "f") {
@@ -157,10 +171,32 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                 ModelTriangle triangle;
                 for (int i = 0; i < 3; ++i) {
                     triangle.vertices[i] = vertices[vertexIndices[i]];
+                    for (size_t j = 0; j < textures.size(); ++j){
+                        if (textures[j].z == vertexIndices[i]){
+                            triangle.texturePoints[i] = TexturePoint(textures[j].x, textures[j].y);
+                            std::cout << "texture assigned : " << triangle.texturePoints[i] << std::endl;
+                        }
+                    }
                 }
                 triangle.colour = currentColour;
                 triangles.push_back(triangle);
             }
+
+
+
+//            int bookMark = 0;
+//            int currentTextureBook = textures[0].z;
+//            for (size_t i = 0; i < textures.size(); ++i) {
+//                if (textures[i].z == currentTextureBook){
+//
+//                } else {
+//                    bookMark = 0;
+//                    currentTextureBook = textures[i].z;
+//
+//                    //TODO : make it possible to assign texture point if there are multiple textures as well
+//                }
+//            }
+            textures.clear();
         }
 
     }
@@ -582,8 +618,11 @@ int main(int argc, char *argv[]) {
     bool terminate = false;
     bool* pause = new bool(false);
 
-    std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
-    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
+//    std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
+//    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
+
+    std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/textured-cornell-box.mtl");
+    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/textured-cornell-box.obj", mtl, 0.35);
 
     glm::vec3* cameraToVertex = new glm::vec3 (0.0, 0.0, 4.0);
     float* f = new float(2.0);
