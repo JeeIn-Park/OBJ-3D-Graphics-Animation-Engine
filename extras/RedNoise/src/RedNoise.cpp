@@ -142,9 +142,13 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         std::string token;
         iss >> token;
 
+        // TODO : use object name
+        if (token == "o"){
+            textures.clear();
+        }
 
         // usemtl - colour
-        if (token == "usemtl") {
+        else if (token == "usemtl") {
             std::string colourName;
             iss >> colourName;
             currentColour = colourMap[colourName];
@@ -163,7 +167,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         else if (token == "vt") {
             glm::vec3 texture;
             iss >> texture.x >> texture.y;
-            texture.z = vertices.size() - (vertexSetSize-1);
+            texture.z = vertices.size() - (vertexSetSize-1) -1;
             textures.push_back(texture);
             vertexSetSize = vertexSetSize - 1;
 //            std::cout << vertices.size() << std::endl;
@@ -205,7 +209,6 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             }
 
 
-
 //            int bookMark = 0;
 //            int currentTextureBook = textures[0].z;
 //            for (size_t i = 0; i < textures.size(); ++i) {
@@ -218,7 +221,6 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 //                    //TODO : make it possible to assign texture point if there are multiple textures as well
 //                }
 //            }
-            textures.clear();
         }
 
     }
@@ -299,14 +301,16 @@ void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour co
 }
 
 
-void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, TextureMap texture){
+void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, TextureMap texture, float** d){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
+    float dDiff = to.depth - from.depth;
 
-    float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
+    float numberOfSteps = std::max(std::max(abs(xDiff), abs(yDiff)), abs(dDiff));
 
     float xStepSize = xDiff/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float dStepSize = dDiff/numberOfSteps;
     float t_xDiff = to.texturePoint.x - from.texturePoint.x;
     float t_yDiff = to.texturePoint.y - from.texturePoint.y;
     float t_xStepSize = t_xDiff/numberOfSteps;
@@ -316,8 +320,20 @@ void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, Textu
     for (int i = 0; i < numberOfSteps; ++i ) {
         intColour = texture.pixels[int(from.texturePoint.x + (t_xStepSize*i)) +
                                    int(from.texturePoint.y + (t_yStepSize*i)) * texture.width];
-        window.setPixelColour(from.x + (xStepSize*i), from.y + (yStepSize*i),
-                              Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF));
+        float x = from.x + (xStepSize*i);
+        float y = from.y + (yStepSize*i);
+        float depth = from.depth + (dStepSize*i);
+
+        int intX = static_cast<int>(x);
+        int intY = static_cast<int>(y);
+
+        if ((intX > 0 && intX < WIDTH && intY > 0 && intY < HEIGHT) && depth >= d[intX][intY]) {
+            window.setPixelColour(intX, intY,
+                                  Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF));
+//            std::cout << "draw texture : " << intColour << std::endl;
+            d[intX][intY] = depth;
+        }
+
     }
 }
 
@@ -357,16 +373,20 @@ void flatTriangleColourFill (DrawingWindow &window, CanvasPoint top, CanvasPoint
 
 
 void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2,
-                              TextureMap texture){
+                              TextureMap texture, float** &d){
     // triangle value
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
     float yDiff = bot1.y - top.y;
-    float numberOfSteps = std::max(std::max(abs(xDiff_1), abs(xDiff_2)), abs(yDiff));
+    float dDiff_1 = bot1.depth - top.depth;
+    float dDiff_2 = bot2.depth - top.depth;
+    float numberOfSteps = std::max(std::max(std::max(abs(xDiff_1), abs(xDiff_2)), std::max(abs(dDiff_1), abs(dDiff_2))), abs(yDiff));
 
     float xStepSize_1 = xDiff_1/numberOfSteps;
     float xStepSize_2 = xDiff_2/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float dStepSize_1 = dDiff_1/numberOfSteps;
+    float dStepSize_2 = dDiff_2/numberOfSteps;
 
     // texture value
     float t_xDiff_1 = bot1.texturePoint.x - top.texturePoint.x;
@@ -377,7 +397,6 @@ void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoin
     float t_xStepSize_2 = t_xDiff_2/numberOfSteps;
     float t_yStepSize = t_yDiff/numberOfSteps;
 
-
     CanvasPoint from, to;
 
     for (int i = 0; i < numberOfSteps; ++i ) {
@@ -385,12 +404,14 @@ void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoin
         to.x = top.x + (xStepSize_2*i);
         from.y = top.y + (yStepSize*i);
         to.y = from.y;
+        from.depth = top.depth + (dStepSize_1*i);
+        to.depth = top.depth + (dStepSize_2*i);
         from.texturePoint.x = top.texturePoint.x + (t_xStepSize_1*i);
         to.texturePoint.x = top.texturePoint.x + (t_xStepSize_2*i);
         from.texturePoint.y = top.texturePoint.y + (t_yStepSize*i);
         to.texturePoint.y = from.texturePoint.y ;
 
-        textureDraw(window, from, to, texture);
+        textureDraw(window, from, to, texture, d);
     }
 }
 
@@ -427,11 +448,10 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
     pk.texturePoint.y = tp0.y + t * (tp2.y - tp0.y);
 
 
-    flatTriangleTextureFill(window, p0, pk, p1, texture);
-    textureDraw(window, p1, pk, texture);
-    flatTriangleTextureFill(window, p2, pk, p1, texture);
+    flatTriangleTextureFill(window, p0, pk, p1, texture, d);
+    textureDraw(window, p1, pk, texture, d);
+    flatTriangleTextureFill(window, p2, pk, p1, texture, d);
     Colour white = Colour(255, 255, 255);
-    strokedTriangleDraw(window, triangle, white, d);
 }
 
 
@@ -464,10 +484,19 @@ void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
         CanvasPoint v1 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[0], *f, s);
         CanvasPoint v2 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[1], *f, s);
         CanvasPoint v3 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[2], *f, s);
-        if (!obj[i].texturePoints.empty()){
+        if (obj[i].texturePoints[0].x == 0){ //TODO : find which need to be done...
             filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
         } else {
-//            texturedTriangleDraw(window, CanvasTriangle(v1, v2, v3), );
+            v1.texturePoint = obj[i].texturePoints[0];
+            v2.texturePoint = obj[i].texturePoints[1];
+            v3.texturePoint = obj[i].texturePoints[2];
+
+            // TODO : change it to use other files as well
+            // TODO : get texture canvas point
+                // for each point to be drawn on the canvas, find relevant 3D coordinate of the texture point, find a canvas point, draw it on screen
+            // TODO : assign it in texturedTriangleDraw before it call
+//            std::cout << "texture triangle" << std::endl;
+            texturedTriangleDraw(window, CanvasTriangle(v1, v2, v3), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm", d);
         }
     }
 }
@@ -642,7 +671,7 @@ int main(int argc, char *argv[]) {
     DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
     SDL_Event event;
     bool terminate = false;
-    bool* pause = new bool(false);
+    bool* pause = new bool(true);
 
 //    std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
 //    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
