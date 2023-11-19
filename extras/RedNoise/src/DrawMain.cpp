@@ -202,11 +202,9 @@ void textureSurfaceLineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint
         CanvasPoint v = CanvasPoint(from.x + (xStepSize*i), from.y + (yStepSize*i));
         v.texturePoint.x = from.texturePoint.x + t_xStepSize*i;
         v.texturePoint.y = from.texturePoint.y + t_yStepSize*i;
-//        intColour = texture.pixels[int(((v.texturePoint.x)/texture.width + 0.5) * texture.width)
-//                                   + int(((v.texturePoint.y)/texture.height + 0.5) * texture.height) * texture.width];
         v.depth = from.depth + (dStepSize*i);
         intColour = texture.pixels[int(v.texturePoint.x) + int(v.texturePoint.y) * texture.width];
-        glm::vec3 vertex = glm::vec3 (v.x/WIDTH, v.y/HEIGHT, v.depth/100);
+        glm::vec3 vertex = glm::vec3 (v.x/(WIDTH/2), v.y/(HEIGHT/2), v.depth/100);
         v = getCanvasIntersectionPoint(*c, *o, vertex, *f, s);
         int intX = static_cast<int>(v.x);
         int intY = static_cast<int>(v.y);
@@ -382,15 +380,15 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
 
 
 void texturedSurfaceDraw(DrawingWindow &window, ModelTriangle sur, glm::vec3 *c, glm::mat3 *o, float *f, float s, float **&d, TextureMap texture) {
-    CanvasPoint p0 = CanvasPoint(WIDTH * sur.vertices[0].x, HEIGHT * sur.vertices[0].y);
+    CanvasPoint p0 = CanvasPoint((WIDTH/2) * sur.vertices[0].x, (HEIGHT/2) * sur.vertices[0].y);
     p0.texturePoint = TexturePoint(  ((sur.texturePoints[0].x) * texture.width),  ((sur.texturePoints[0].y) * texture.height) );
     p0.depth = 100 * sur.vertices[0].z;
 
-    CanvasPoint p1 = CanvasPoint(WIDTH * sur.vertices[1].x, HEIGHT * sur.vertices[1].y);
+    CanvasPoint p1 = CanvasPoint((WIDTH/2) * sur.vertices[1].x, (HEIGHT/2) * sur.vertices[1].y);
     p1.texturePoint = TexturePoint(  ((sur.texturePoints[1].x) * texture.width),  ((sur.texturePoints[1].y) * texture.height) );
     p1.depth = 100 * sur.vertices[1].z;
 
-    CanvasPoint p2 = CanvasPoint(WIDTH * sur.vertices[2].x, HEIGHT * sur.vertices[2].y);
+    CanvasPoint p2 = CanvasPoint((WIDTH/2) * sur.vertices[2].x, (HEIGHT/2) * sur.vertices[2].y);
     p2.texturePoint = TexturePoint(  ((sur.texturePoints[2].x) * texture.width),  ((sur.texturePoints[2].y) * texture.height) );
     p2.depth = 100 * sur.vertices[2].z;
 
@@ -457,19 +455,6 @@ void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
         } else {
             TextureMap texture = TextureMap(filename);
             texturedSurfaceDraw(window, obj[i], c, o, f, s, d, texture);
-//            CanvasPoint v1 = getTexturedCanvasIntersectionPoint(*c, *o, obj[i].vertices[0], obj[i].texturePoints[0], *f, s);
-//            CanvasPoint v2 = getTexturedCanvasIntersectionPoint(*c, *o, obj[i].vertices[1], obj[i].texturePoints[1], *f, s);
-//            CanvasPoint v3 = getTexturedCanvasIntersectionPoint(*c, *o, obj[i].vertices[2], obj[i].texturePoints[2], *f, s);
-//            v1.texturePoint = obj[i].texturePoints[0];
-//            v2.texturePoint = obj[i].texturePoints[1];
-//            v3.texturePoint = obj[i].texturePoints[2];
-//
-//            // TODO : change it to use other files as well
-//            // TODO : get texture canvas point
-//                // for each point to be drawn on the canvas, find relevant 3D coordinate of the texture point, find a canvas point, draw it on screen
-//            // TODO : assign it in texturedTriangleDraw before it call
-////            std::cout << "texture triangle" << std::endl;
-//            texturedTriangleDraw(window, CanvasTriangle(v1, v2, v3), "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm", d);
         }
     }
 }
