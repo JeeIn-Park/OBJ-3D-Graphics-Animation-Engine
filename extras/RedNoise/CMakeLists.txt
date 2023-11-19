@@ -35,7 +35,9 @@ add_executable(RedNoise
         libs/sdw/TextureMap.cpp
         libs/sdw/TexturePoint.cpp
         libs/sdw/Utils.cpp
-        src/DrawMain.cpp)
+        src/DrawMain.cpp
+        libs/ally/obj_reader.h
+        libs/ally/obj_reader.cpp)
 
 if (MSVC)
     target_compile_options(RedNoise
