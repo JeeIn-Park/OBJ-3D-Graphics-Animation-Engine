@@ -1,4 +1,4 @@
-PROJECT_NAME := RedNoise
+PROJECT_NAME := DrawMain
 
 BUILD_DIR := build
 
