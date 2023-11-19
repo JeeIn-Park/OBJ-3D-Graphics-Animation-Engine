@@ -13,8 +13,6 @@
 // TODO : check if it's allowed to use this library
 #include <unordered_map>
 #include <sstream>
-
-//TODO : going to delete this, only for the test
 #include <thread>
 
 #define WIDTH 320
@@ -126,6 +124,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
     std::vector<glm::vec3> vertices;
     int vertexSetSize = 0;
     std::vector<glm::vec3> textures;
+    bool assignTexture = false;
     Colour currentColour;
 
     std::string line;
@@ -144,6 +143,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
         // TODO : use object name
         if (token == "o"){
+            assignTexture = false;
             textures.clear();
         }
 
@@ -170,6 +170,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             texture.z = vertices.size() - (vertexSetSize-1) -1;
             textures.push_back(texture);
             vertexSetSize = vertexSetSize - 1;
+            assignTexture = true;
 //            std::cout << vertices.size() << std::endl;
 //            std::cout << vertexSetSize << std::endl;
 //            std::cout << texture.z << std::endl;
@@ -197,11 +198,15 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                 ModelTriangle triangle;
                 for (int i = 0; i < 3; ++i) {
                     triangle.vertices[i] = vertices[vertexIndices[i]];
-                    for (size_t j = 0; j < textures.size(); ++j){
-                        if (textures[j].z == vertexIndices[i]){
-                            triangle.texturePoints[i] = TexturePoint(textures[j].x, textures[j].y);
+                    if (assignTexture){
+                        for (size_t j = 0; j < textures.size(); ++j){
+                            if (textures[j].z == vertexIndices[i]){
+                                triangle.texturePoints[i] = TexturePoint(textures[j].x, textures[j].y);
 //                            std::cout << "texture assigned" << std::endl;
+                            }
                         }
+                    } else {
+                        triangle.texturePoints[i] = TexturePoint(-1, -1);
                     }
                 }
                 triangle.colour = currentColour;
@@ -270,6 +275,15 @@ CanvasTriangle randomTriangle() {
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s) {
     glm::vec3 r = o * (v - c);
     return CanvasPoint(s/2 * -f * r.x/r.z + WIDTH/2, s/2 * f * r.y/r.z + HEIGHT/2, 1/-r.z);
+}
+
+CanvasPoint getTexturedCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, TexturePoint t, float f, float s){
+    glm::vec3 rv = o * (v - c);
+    CanvasPoint result = CanvasPoint(s / 2 * -f * rv.x / rv.z + WIDTH / 2, s / 2 * f * rv.y / rv.z + HEIGHT / 2, 1 / -rv.z);
+
+    glm::vec3 rt = glm::vec3(2 * (t.x -0.5), 2 * (t.y -0.5), v.z);
+
+    return result;
 }
 
 
@@ -455,6 +469,11 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
 }
 
 
+void texturedSurfaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 *c, glm::mat3* o, float* f, float s, float** &d){
+
+}
+
+
 void objVerticesDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 c, glm::mat3 o, float f, float s) {
     CanvasPoint v;
     for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
@@ -480,13 +499,16 @@ void objEdgeDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec
 
 void objFaceDraw(DrawingWindow &window, std::vector<ModelTriangle> obj, glm::vec3 *c, glm::mat3* o, float* f, float s, float** &d) {
     window.clearPixels();
-    for (int i = 0; i < static_cast<int>(obj.size()); ++ i) {
-        CanvasPoint v1 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[0], *f, s);
-        CanvasPoint v2 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[1], *f, s);
-        CanvasPoint v3 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[2], *f, s);
-        if (obj[i].texturePoints[0].x == 0){ //TODO : find which need to be done...
+    for (size_t i = 0; i < obj.size(); ++ i) {
+        if (obj[i].texturePoints[0].x == -1){
+            CanvasPoint v1 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[0], *f, s);
+            CanvasPoint v2 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[1], *f, s);
+            CanvasPoint v3 = getCanvasIntersectionPoint(*c, *o, obj[i].vertices[2], *f, s);
             filledTriangleDraw(window, CanvasTriangle(v1, v2, v3), obj[i].colour, d);
         } else {
+            CanvasPoint v1 = getTexturedCanvasIntersectionPoint(*c, *o, obj[i].vertices[0], obj[i].texturePoints[0], *f, s);
+            CanvasPoint v2 = getTexturedCanvasIntersectionPoint(*c, *o, obj[i].vertices[1], obj[i].texturePoints[1], *f, s);
+            CanvasPoint v3 = getTexturedCanvasIntersectionPoint(*c, *o, obj[i].vertices[2], obj[i].texturePoints[2], *f, s);
             v1.texturePoint = obj[i].texturePoints[0];
             v2.texturePoint = obj[i].texturePoints[1];
             v3.texturePoint = obj[i].texturePoints[2];
