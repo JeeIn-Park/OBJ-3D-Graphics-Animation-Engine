@@ -479,11 +479,16 @@ void flatTriangleTextureSurfaceFill (DrawingWindow &window, CanvasPoint top, Can
     float xDiff_1 = bot1.x - top.x;
     float xDiff_2 = bot2.x - top.x;
     float yDiff = bot1.y - top.y;
-    float numberOfSteps = std::max(std::max(abs(xDiff_1), abs(xDiff_2)), abs(yDiff));
+    float dDiff_1 = bot1.depth - top.depth;
+    float dDiff_2 = bot2.depth - top.depth;
+//    float numberOfSteps = std::max(std::max(abs(xDiff_1), abs(xDiff_2)), abs(yDiff));
+    float numberOfSteps = std::max(std::max(std::max(abs(xDiff_1), abs(xDiff_2)), std::max(abs(dDiff_1), abs(dDiff_2))), abs(yDiff));
 
     float xStepSize_1 = xDiff_1/numberOfSteps;
     float xStepSize_2 = xDiff_2/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
+    float dStepSize_1 = dDiff_1/numberOfSteps;
+    float dStepSize_2 = dDiff_2/numberOfSteps;
 
     // texture value
     float t_xDiff_1 = bot1.texturePoint.x - top.texturePoint.x;
@@ -495,11 +500,14 @@ void flatTriangleTextureSurfaceFill (DrawingWindow &window, CanvasPoint top, Can
     float t_yStepSize = t_yDiff/numberOfSteps;
 
     CanvasPoint from, to;
+
     for (int i = 0; i < numberOfSteps; ++i ) {
         from.x = top.x + (xStepSize_1*i);
         to.x = top.x + (xStepSize_2*i);
         from.y = top.y + (yStepSize*i);
         to.y = from.y;
+        from.depth = top.depth + (dStepSize_1*i);
+        to.depth = top.depth + (dStepSize_2*i);
         from.texturePoint.x = top.texturePoint.x + (t_xStepSize_1*i);
         to.texturePoint.x = top.texturePoint.x + (t_xStepSize_2*i);
         from.texturePoint.y = top.texturePoint.y + (t_yStepSize*i);
@@ -551,19 +559,9 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
 
 
 void texturedSurfaceDraw(DrawingWindow &window, ModelTriangle sur, glm::vec3 *c, glm::mat3 *o, float *f, float s, float **&d, TextureMap texture) {
-    CanvasPoint v1 = getTexturedCanvasIntersectionPoint(*c, *o, sur.vertices[0], sur.texturePoints[0], *f, s, texture);
-    CanvasPoint v2 = getTexturedCanvasIntersectionPoint(*c, *o, sur.vertices[1], sur.texturePoints[1], *f, s, texture);
-    CanvasPoint v3 = getTexturedCanvasIntersectionPoint(*c, *o, sur.vertices[2], sur.texturePoints[2], *f, s, texture);
-
-    CanvasPoint p0 = CanvasPoint(sur.vertices[0].x, sur.vertices[0].y);
-    p0.texturePoint = sur.texturePoints[0];
-    p0.depth = sur.vertices[0].z;
-    CanvasPoint p1 = CanvasPoint(sur.vertices[1].x, sur.vertices[1].y);
-    p1.texturePoint = sur.texturePoints[1];
-    p1.depth = sur.vertices[1].z;
-    CanvasPoint p2 = CanvasPoint(sur.vertices[2].x, sur.vertices[2].y);
-    p2.texturePoint = sur.texturePoints[2];
-    p2.depth = sur.vertices[2].z;
+    CanvasPoint p0 = getTexturedCanvasIntersectionPoint(*c, *o, sur.vertices[0], sur.texturePoints[0], *f, s, texture);
+    CanvasPoint p1 = getTexturedCanvasIntersectionPoint(*c, *o, sur.vertices[1], sur.texturePoints[1], *f, s, texture);
+    CanvasPoint p2 = getTexturedCanvasIntersectionPoint(*c, *o, sur.vertices[2], sur.texturePoints[2], *f, s, texture);
 
     // sort points
     if (p0.y > p1.y)   std::swap(p0, p1);
@@ -571,14 +569,15 @@ void texturedSurfaceDraw(DrawingWindow &window, ModelTriangle sur, glm::vec3 *c,
     if (p0.y > p1.y)   std::swap(p0, p1);
 
     TexturePoint tp0 = p0.texturePoint, tp2 = p2.texturePoint;
-    CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),p1.y);
+    CanvasPoint pk = CanvasPoint(((p1.y-p0.y)*p2.x + (p2.y-p1.y)*p0.x)/(p2.y-p0.y),
+                                 p1.y,
+                                 ((p1.y-p0.y)*p2.depth + (p2.y-p1.y)*p0.depth)/(p2.y-p0.y));
     float t = (pk.x - p0.x) / (p2.x - p0.x);
     pk.texturePoint.y = tp0.y + t * (tp2.y - tp0.y);
 
     flatTriangleTextureSurfaceFill(window, p0, pk, p1, c, o, f, s, texture, d);
     textureDraw(window, p1, pk, texture, d);
     flatTriangleTextureSurfaceFill(window, p2, pk, p1, c, o, f, s, texture, d);
-
 
     //    uint32_t intColour = textureMap.pixels[textureResult.x + textureResult.y * textureMap.width];
     //    Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF);
