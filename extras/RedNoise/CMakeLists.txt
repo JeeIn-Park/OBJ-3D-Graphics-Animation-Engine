@@ -37,7 +37,9 @@ add_executable(RedNoise
         libs/sdw/Utils.cpp
         src/DrawMain.cpp
         libs/ally/obj_reader.h
-        libs/ally/obj_reader.cpp)
+        libs/ally/obj_reader.cpp
+        libs/ally/raster.cpp
+        libs/ally/raster.h)
 
 if (MSVC)
     target_compile_options(RedNoise
