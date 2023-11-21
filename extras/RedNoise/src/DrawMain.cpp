@@ -85,10 +85,11 @@ CanvasTriangle randomTriangle() {
 
 
 /**
-   *  @param  c  camera position
-   *  @param  direction  ray direction
+   *  @param  c           camera position
+   *  @param  direction   ray direction
+   *  @param  obj         list of object facets
   */
-RayTriangleIntersection getClosestIntersection(glm::vec3 c, glm::vec3 direction, std::vector<ModelTriangle> obj) {
+RayTriangleIntersection getClosestValidIntersection(glm::vec3 c, glm::vec3 direction, std::vector<ModelTriangle> obj) {
     // search through the all the triangles in the current scene and return details of the closest intersected triangle
     // (if indeed there is an intersection)
     RayTriangleIntersection closestIntersection;
@@ -100,11 +101,20 @@ RayTriangleIntersection getClosestIntersection(glm::vec3 c, glm::vec3 direction,
         glm::mat3 DEMatrix(-direction, e0, e1);
         glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
 
-        if (possibleSolution.x >= 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
-            && possibleSolution.x <= closestIntersection.distanceFromCamera
-            && possibleSolution.y <= glm::length(e0) && possibleSolution.z <= glm::length(e1)) {
+//        if (possibleSolution.x >= 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
+//            && possibleSolution.x <= closestIntersection.distanceFromCamera
+//            && possibleSolution.y <= glm::length(e0) && possibleSolution.z <= glm::length(e1)) {
+//
+//            closestIntersection = RayTriangleIntersection(c + possibleSolution.x * direction, possibleSolution.x, triangle, i);
+//            break;
+//        }
+
+        if (possibleSolution.y >= 0 && possibleSolution.z >= 0 &&
+            possibleSolution.y <= 1 && possibleSolution.z <= 1 &&
+            possibleSolution.y       + possibleSolution.z <= 1) {
 
             closestIntersection = RayTriangleIntersection(c + possibleSolution.x * direction, possibleSolution.x, triangle, i);
+            break;
         }
     }
     return closestIntersection;
