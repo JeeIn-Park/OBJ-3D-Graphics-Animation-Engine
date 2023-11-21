@@ -197,20 +197,20 @@ void textureSurfaceLineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint
     float t_xStepSize = t_xDiff/numberOfSteps;
     float t_yStepSize = t_yDiff/numberOfSteps;
 
-    uint32_t intColour = 0;
+    uint32_t intColour;
     for (int i = 0; i < numberOfSteps; ++i ) {
         CanvasPoint v = CanvasPoint(from.x + (xStepSize*i), from.y + (yStepSize*i));
         v.texturePoint.x = from.texturePoint.x + t_xStepSize*i;
         v.texturePoint.y = from.texturePoint.y + t_yStepSize*i;
         v.depth = from.depth + (dStepSize*i);
         intColour = texture.pixels[int(v.texturePoint.x) + int(v.texturePoint.y) * texture.width];
-        glm::vec3 vertex = glm::vec3 (v.x/(WIDTH/2), v.y/(HEIGHT/2), v.depth/100);
+        glm::vec3 vertex = glm::vec3 ((v.x-WIDTH)/(HEIGHT/2), (v.y-HEIGHT)/(HEIGHT/2), v.depth/(HEIGHT/2));
         v = getCanvasIntersectionPoint(*c, *o, vertex, *f, s);
         int intX = static_cast<int>(v.x);
         int intY = static_cast<int>(v.y);
         if ((intX > 0 && intX < WIDTH && intY > 0 && intY < HEIGHT) && v.depth >= d[intX][intY]) {
-            window.setPixelColour(intX, intY,
-                                  Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF));
+            Colour colour = Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF);
+            window.setPixelColour(intX, intY, colour);
 //            std::cout << "draw texture : " << intColour << std::endl;
             d[intX][intY] = v.depth;
         }
@@ -271,11 +271,13 @@ void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoin
     // texture value
     float t_xDiff_1 = bot1.texturePoint.x - top.texturePoint.x;
     float t_xDiff_2 = bot2.texturePoint.x - top.texturePoint.x;
-    float t_yDiff = bot1.texturePoint.y - top.texturePoint.y;
+    float t_yDiff_1 = bot1.texturePoint.y - top.texturePoint.y;
+    float t_yDiff_2 = bot2.texturePoint.y - top.texturePoint.y;
 
     float t_xStepSize_1 = t_xDiff_1/numberOfSteps;
     float t_xStepSize_2 = t_xDiff_2/numberOfSteps;
-    float t_yStepSize = t_yDiff/numberOfSteps;
+    float t_yStepSize_1 = t_yDiff_1/numberOfSteps;
+    float t_yStepSize_2 = t_yDiff_2/numberOfSteps;
 
     CanvasPoint from, to;
 
@@ -288,8 +290,8 @@ void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoin
         to.depth = top.depth + (dStepSize_2*i);
         from.texturePoint.x = top.texturePoint.x + (t_xStepSize_1*i);
         to.texturePoint.x = top.texturePoint.x + (t_xStepSize_2*i);
-        from.texturePoint.y = top.texturePoint.y + (t_yStepSize*i);
-        to.texturePoint.y = from.texturePoint.y ;
+        from.texturePoint.y = top.texturePoint.y + (t_yStepSize_1*i);
+        to.texturePoint.y = top.texturePoint.y + (t_yStepSize_2*i);
 
         textureDraw(window, from, to, texture, d);
     }
@@ -314,11 +316,13 @@ void flatTriangleTextureSurfaceFill (DrawingWindow &window, CanvasPoint top, Can
     // texture value
     float t_xDiff_1 = bot1.texturePoint.x - top.texturePoint.x;
     float t_xDiff_2 = bot2.texturePoint.x - top.texturePoint.x;
-    float t_yDiff = bot1.texturePoint.y - top.texturePoint.y;
+    float t_yDiff_1 = bot1.texturePoint.y - top.texturePoint.y;
+    float t_yDiff_2 = bot2.texturePoint.y - top.texturePoint.y;
 
     float t_xStepSize_1 = t_xDiff_1/numberOfSteps;
     float t_xStepSize_2 = t_xDiff_2/numberOfSteps;
-    float t_yStepSize = t_yDiff/numberOfSteps;
+    float t_yStepSize_1 = t_yDiff_1/numberOfSteps;
+    float t_yStepSize_2 = t_yDiff_2/numberOfSteps;
 
     CanvasPoint from, to;
 
@@ -331,10 +335,11 @@ void flatTriangleTextureSurfaceFill (DrawingWindow &window, CanvasPoint top, Can
         to.depth = top.depth + (dStepSize_2*i);
         from.texturePoint.x = top.texturePoint.x + (t_xStepSize_1*i);
         to.texturePoint.x = top.texturePoint.x + (t_xStepSize_2*i);
-        from.texturePoint.y = top.texturePoint.y + (t_yStepSize*i);
-        to.texturePoint.y = from.texturePoint.y ;
+        from.texturePoint.y = top.texturePoint.y + (t_yStepSize_1*i);
+        to.texturePoint.y = top.texturePoint.y + (t_yStepSize_2*i);
 
         textureSurfaceLineDraw(window, from, to, c, o, f, s, texture, d);
+
     }
 }
 
@@ -380,17 +385,17 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
 
 
 void texturedSurfaceDraw(DrawingWindow &window, ModelTriangle sur, glm::vec3 *c, glm::mat3 *o, float *f, float s, float **&d, TextureMap texture) {
-    CanvasPoint p0 = CanvasPoint((WIDTH/2) * sur.vertices[0].x, (HEIGHT/2) * sur.vertices[0].y);
+    CanvasPoint p0 = CanvasPoint((HEIGHT/2) *  sur.vertices[0].x + WIDTH, (HEIGHT/2) *  sur.vertices[0].y + HEIGHT);
     p0.texturePoint = TexturePoint(  ((sur.texturePoints[0].x) * texture.width),  ((sur.texturePoints[0].y) * texture.height) );
-    p0.depth = 100 * sur.vertices[0].z;
+    p0.depth = (HEIGHT/2) * sur.vertices[0].z;
 
-    CanvasPoint p1 = CanvasPoint((WIDTH/2) * sur.vertices[1].x, (HEIGHT/2) * sur.vertices[1].y);
+    CanvasPoint p1 = CanvasPoint((HEIGHT/2) *  sur.vertices[1].x + WIDTH, (HEIGHT/2) *  sur.vertices[1].y + HEIGHT);
     p1.texturePoint = TexturePoint(  ((sur.texturePoints[1].x) * texture.width),  ((sur.texturePoints[1].y) * texture.height) );
-    p1.depth = 100 * sur.vertices[1].z;
+    p1.depth = (HEIGHT/2) * sur.vertices[1].z;
 
-    CanvasPoint p2 = CanvasPoint((WIDTH/2) * sur.vertices[2].x, (HEIGHT/2) * sur.vertices[2].y);
+    CanvasPoint p2 = CanvasPoint((HEIGHT/2) *  sur.vertices[2].x + WIDTH, (HEIGHT/2) * sur.vertices[2].y + HEIGHT);
     p2.texturePoint = TexturePoint(  ((sur.texturePoints[2].x) * texture.width),  ((sur.texturePoints[2].y) * texture.height) );
-    p2.depth = 100 * sur.vertices[2].z;
+    p2.depth = (HEIGHT/2) *  sur.vertices[2].z;
 
     // sort points
     if (p0.y > p1.y)   std::swap(p0, p1);
@@ -566,13 +571,12 @@ RayTriangleIntersection getClosestIntersection(glm::vec3 c, glm::vec3 direction,
         glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
 
         if (possibleSolution.x >= 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
-                && possibleSolution.x <= closestIntersection.distanceFromCamera
-                && possibleSolution.y <= glm::length(e0) && possibleSolution.z <= glm::length(e1)) {
+            && possibleSolution.x <= closestIntersection.distanceFromCamera
+            && possibleSolution.y <= glm::length(e0) && possibleSolution.z <= glm::length(e1)) {
 
             closestIntersection = RayTriangleIntersection(c + possibleSolution.x * direction, possibleSolution.x, triangle, i);
         }
     }
-
     return closestIntersection;
 }
 

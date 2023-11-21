@@ -155,7 +155,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                     if (assignTexture){
                         for (size_t j = 0; j < textures.size(); ++j){
                             if (textures[j].z == vertexIndices[i]){
-                                triangle.texturePoints[i] = TexturePoint(textures[j].x, textures[j].y);
+                                triangle.texturePoints[i] = TexturePoint(textures[j].y, textures[j].x);
 //                            std::cout << "texture assigned" << std::endl;
                             }
                         }
