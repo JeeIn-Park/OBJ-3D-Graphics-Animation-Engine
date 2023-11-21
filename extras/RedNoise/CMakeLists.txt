@@ -39,7 +39,9 @@ add_executable(RedNoise
         libs/ally/obj_reader.h
         libs/ally/obj_reader.cpp
         libs/ally/raster.cpp
-        libs/ally/raster.h)
+        libs/ally/raster.h
+        libs/ally/camera_move.cpp
+        libs/ally/camera_move.h)
 
 if (MSVC)
     target_compile_options(RedNoise
