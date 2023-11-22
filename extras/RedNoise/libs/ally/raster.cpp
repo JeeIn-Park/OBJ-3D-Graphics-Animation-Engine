@@ -18,10 +18,9 @@
 
 
 /**
-   *  @param  c  camera position
-   *  @param  o  camera orientation
-   *  @param  v  vertex position
-   *  @param  f  focal length
+   *  @param  c  cameraPosition
+   *  @param  v  vertexPosition
+   *  @param  f  focalLength
    *  @param  s  scaling factor
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s) {
@@ -114,19 +113,14 @@ void textureDraw (DrawingWindow &window, CanvasPoint from, CanvasPoint to, Textu
     }
 }
 
+void textureSurfaceLineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to,
+                            glm::vec3 *c, glm::mat3 *o, float *f, float s, TextureMap texture, float** d){
+    float xDiff = to.x - from.x;
+    float yDiff = to.y - from.y;
+    float dDiff = to.depth - from.depth;
 
-void textureSurfaceLineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to,  glm::vec3 *c, glm::mat3 *o, float *f, float s, TextureMap texture, float** d){
-    CanvasPoint fromCanvas = getCanvasIntersectionPoint(*c, *o, glm::vec3 (from.x, from.y, from.depth), *f, s);
-    CanvasPoint toCanvas   = getCanvasIntersectionPoint(*c, *o, glm::vec3 (to.x, to.y, to.depth), *f, s);
-
-    float xDiff = toCanvas.x - fromCanvas.x;
-    float yDiff = toCanvas.y - fromCanvas.y;
-    float dDiff = toCanvas.depth - fromCanvas.depth;
     float numberOfSteps = std::max(std::max(abs(xDiff), abs(yDiff)), abs(dDiff));
 
-    xDiff = to.x - from.x;
-    yDiff = to.y - from.y;
-    dDiff = to.depth - from.depth;
     float xStepSize = xDiff/numberOfSteps;
     float yStepSize = yDiff/numberOfSteps;
     float dStepSize = dDiff/numberOfSteps;
@@ -144,7 +138,7 @@ void textureSurfaceLineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint
         v.texturePoint.y = from.texturePoint.y + t_yStepSize*i;
         v.depth = from.depth + (dStepSize*i);
         intColour = texture.pixels[int(v.texturePoint.x) + int(v.texturePoint.y) * texture.width];
-        glm::vec3 vertex = glm::vec3 (v.x, v.y, v.depth);
+        glm::vec3 vertex = glm::vec3 ((v.x-WIDTH)/(HEIGHT/2), (v.y-HEIGHT)/(HEIGHT/2), v.depth/(HEIGHT/2));
         v = getCanvasIntersectionPoint(*c, *o, vertex, *f, s);
         int intX = static_cast<int>(v.x);
         int intY = static_cast<int>(v.y);
@@ -153,13 +147,11 @@ void textureSurfaceLineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint
             window.setPixelColour(intX, intY, colour);
 //            std::cout << "draw texture : " << intColour << std::endl;
             d[intX][intY] = v.depth;
-
         }
     }
 }
 
-
-void textureSurfaceLineDraw1(DrawingWindow &window, CanvasPoint from, CanvasPoint to,
+void originalTextureSurfaceLineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to,
                             glm::vec3 *c, glm::mat3 *o, float *f, float s, TextureMap texture, float** d){
     float xDiff = to.x - from.x;
     float yDiff = to.y - from.y;
@@ -279,22 +271,25 @@ void flatTriangleTextureFill (DrawingWindow &window, CanvasPoint top, CanvasPoin
 
 void flatTriangleTextureSurfaceFill (DrawingWindow &window, CanvasPoint top, CanvasPoint bot1, CanvasPoint bot2,
                                      glm::vec3 *c, glm::mat3 *o, float *f, float s, TextureMap texture, float** &d){
-    CanvasPoint topCanvas = getCanvasIntersectionPoint(*c, *o, glm::vec3 (top.x, top.y, top.depth), *f, s);
-    CanvasPoint bot1Canvas   = getCanvasIntersectionPoint(*c, *o, glm::vec3 (bot1.x, bot1.y, bot1.depth), *f, s);
-    CanvasPoint bot2Canvas   = getCanvasIntersectionPoint(*c, *o, glm::vec3 (bot2.x, bot2.y, bot2.depth), *f, s);
 
-    // triangle value
-    float xDiff_1 = bot1Canvas.x - topCanvas.x;
-    float xDiff_2 = bot2Canvas.x - topCanvas.x;
-    float yDiff = bot1Canvas.y - topCanvas.y;
-    float dDiff_1 = bot1Canvas.depth - topCanvas.depth;
-    float dDiff_2 = bot2Canvas.depth - topCanvas.depth;
-    float numberOfSteps = std::max(std::max(std::max(abs(xDiff_1), abs(xDiff_2)), std::max(abs(dDiff_1), abs(dDiff_2))), abs(yDiff));
-    xDiff_1 = bot1.x - top.x;
-    xDiff_2 = bot2.x - top.x;
-    yDiff = bot1.y - top.y;
-    dDiff_1 = bot1.depth - top.depth;
-    dDiff_2 = bot2.depth - top.depth;
+    glm::vec3 vecTop = *o * (glm::vec3(top.x, top.y, top.depth) - *c);
+    CanvasPoint canvasTop = CanvasPoint(s / 2 * -*f * vecTop.x / vecTop.z + WIDTH / 2, s / 2 * *f * vecTop.y / vecTop.z + HEIGHT / 2);
+    glm::vec3 vecBot1 = *o * (glm::vec3(top.x, top.y, top.depth) - *c);
+    CanvasPoint canvasBot1 = CanvasPoint(s / 2 * -*f * vecBot1.x / vecBot1.z + WIDTH / 2, s / 2 * *f * vecBot1.y / vecBot1.z + HEIGHT / 2);
+    glm::vec3 vecBot2 = *o * (glm::vec3(top.x, top.y, top.depth) - *c);
+    CanvasPoint canvasBot2 = CanvasPoint(s / 2 * -*f * vecBot2.x / vecBot2.z + WIDTH / 2, s / 2 * *f * vecBot2.y / vecBot2.z + HEIGHT / 2);
+
+    float CxDiff_1 = canvasBot1.x - canvasTop.x;
+    float CxDiff_2 = canvasBot2.x - canvasTop.x;
+    float CyDiff = canvasBot1.y - canvasTop.y;
+    float dDiff_1 = bot1.depth - top.depth;
+    float dDiff_2 = bot2.depth - top.depth;
+
+    float numberOfSteps = std::max(std::max(std::max(abs(CxDiff_1), abs(CxDiff_2)), std::max(abs(dDiff_1), abs(dDiff_2))), abs(CyDiff));
+
+    float xDiff_1 = bot1.x - top.x;
+    float xDiff_2 = bot2.x - top.x;
+    float yDiff = bot1.y - top.y;
 
     float xStepSize_1 = xDiff_1/numberOfSteps;
     float xStepSize_2 = xDiff_2/numberOfSteps;
@@ -374,17 +369,17 @@ void texturedTriangleDraw(DrawingWindow &window, CanvasTriangle triangle, const 
 
 
 void texturedSurfaceDraw(DrawingWindow &window, ModelTriangle sur, glm::vec3 *c, glm::mat3 *o, float *f, float s, float **&d, TextureMap texture) {
-    CanvasPoint p0 = CanvasPoint(sur.vertices[0].x, sur.vertices[0].y);
+    CanvasPoint p0 = CanvasPoint((HEIGHT/2) *  sur.vertices[0].x + WIDTH, (HEIGHT/2) *  sur.vertices[0].y + HEIGHT);
     p0.texturePoint = TexturePoint(  ((sur.texturePoints[0].x) * texture.width),  ((sur.texturePoints[0].y) * texture.height) );
-    p0.depth = sur.vertices[0].z;
+    p0.depth = (HEIGHT/2) * sur.vertices[0].z;
 
-    CanvasPoint p1 = CanvasPoint(sur.vertices[1].x, sur.vertices[1].y);
+    CanvasPoint p1 = CanvasPoint((HEIGHT/2) *  sur.vertices[1].x + WIDTH, (HEIGHT/2) *  sur.vertices[1].y + HEIGHT);
     p1.texturePoint = TexturePoint(  ((sur.texturePoints[1].x) * texture.width),  ((sur.texturePoints[1].y) * texture.height) );
-    p1.depth = sur.vertices[1].z;
+    p1.depth = (HEIGHT/2) * sur.vertices[1].z;
 
-    CanvasPoint p2 = CanvasPoint(sur.vertices[2].x, sur.vertices[2].y);
+    CanvasPoint p2 = CanvasPoint((HEIGHT/2) *  sur.vertices[2].x + WIDTH, (HEIGHT/2) * sur.vertices[2].y + HEIGHT);
     p2.texturePoint = TexturePoint(  ((sur.texturePoints[2].x) * texture.width),  ((sur.texturePoints[2].y) * texture.height) );
-    p2.depth = sur.vertices[2].z;
+    p2.depth = (HEIGHT/2) *  sur.vertices[2].z;
 
     // sort points
     if (p0.y > p1.y)   std::swap(p0, p1);
