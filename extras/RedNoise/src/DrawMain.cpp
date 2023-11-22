@@ -109,19 +109,17 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 c, glm::vec3 direc
     closestIntersection.distanceFromCamera = std::numeric_limits<float>::infinity();
     for (size_t i = 0; i < obj.size(); ++i) {
         ModelTriangle triangle = obj[i];
+        glm::vec3 SPVector = c - triangle.vertices[0];
         glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
         glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
-        glm::vec3 SPVector = c - triangle.vertices[0];
         glm::mat3 DEMatrix(-direction, e0, e1);
         glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
 
-        if (possibleSolution.y >= 0 && possibleSolution.z >= 0 &&
-            possibleSolution.y <= 1 && possibleSolution.z <= 1 &&
-            possibleSolution.y       + possibleSolution.z <= 1) {
-
-//            closestIntersection = RayTriangleIntersection(c + possibleSolution.x * direction, possibleSolution.x, triangle, i);
+        if (possibleSolution.x >= 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
+            && possibleSolution.x <= closestIntersection.distanceFromCamera
+            && possibleSolution.y <= 1 && possibleSolution.z <= 1
+            && possibleSolution.y + possibleSolution.z <= 1)  {
             closestIntersection = RayTriangleIntersection(possibleSolution, possibleSolution.x, triangle, i);
-            break;
         }
     }
     return closestIntersection;
@@ -131,7 +129,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
 
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
-            glm::vec3 rayDirection = o * glm::normalize(glm::vec3(2*x/WIDTH -1 - c.x, 1 - 2*y/HEIGHT  - c.y, -f));
+            glm::vec3 rayDirection = glm::normalize(o * glm::vec3((-0.5 + x/WIDTH - c.x) * (WIDTH/HEIGHT),  -0.5 + y/HEIGHT - c.y, f - c.z));
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
             std::cout << x << "," << y << ":" << intersection.distanceFromCamera << std::endl;
             if (intersection.distanceFromCamera != std::numeric_limits<float>::infinity()) {
@@ -140,7 +138,6 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                 window.setPixelColour(x, y, triangle.colour);
             }
         }
-
     }
 }
 
