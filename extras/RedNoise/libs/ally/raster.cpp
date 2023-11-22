@@ -17,6 +17,17 @@
 #define HEIGHT 240
 
 
+
+int positiveOrNegative(float value) {
+    if (value > 0) {
+        return 1;
+    } else if (value < 0) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
 /**
    *  @param  c  cameraPosition
    *  @param  v  vertexPosition
@@ -25,8 +36,10 @@
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s) {
     glm::vec3 r = o * (v - c);
-    return CanvasPoint(s/2 * -f * r.x/r.z + WIDTH/2, s/2 * f * r.y/r.z + HEIGHT/2, 1/-r.z);
+    int corrector = positiveOrNegative(c.z);
+    return CanvasPoint(s/2 * f * corrector * r.x/r.z + WIDTH/2, s/2 * f * corrector * r.y/r.z + HEIGHT/2, 1/-r.z);
 }
+
 
 //CanvasPoint getTexturedCanvasIntersectionPoint(glm::vec3 c, glm::mat3 o, CanvasPoint vertex, float f, float s, TextureMap texture) {
 //    glm::vec3 v = glm::vec3(vertex.x/WIDTH, vertex.y/HEIGHT, vertex.depth/100);
