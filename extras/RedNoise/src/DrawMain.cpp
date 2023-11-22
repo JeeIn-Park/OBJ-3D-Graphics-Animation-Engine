@@ -85,6 +85,19 @@ CanvasTriangle randomTriangle() {
 
 
 /**
+   *  @param  c  camera position
+   *  @param  o  camera orientation
+   *  @param  v  vertex position
+   *  @param  f  focal length
+   *  @param  s  scaling factor
+  */
+CanvasPoint drawRayTracedScene (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s) {
+    glm::vec3 r = o * (v - c);
+    return CanvasPoint(s/2 * -f * r.x/r.z + WIDTH/2, s/2 * f * r.y/r.z + HEIGHT/2, 1/-r.z);
+}
+
+
+/**
    *  @param  c           camera position
    *  @param  direction   ray direction
    *  @param  obj         list of object facets
@@ -101,13 +114,6 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 c, glm::vec3 direc
         glm::mat3 DEMatrix(-direction, e0, e1);
         glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
 
-//        if (possibleSolution.x >= 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
-//            && possibleSolution.x <= closestIntersection.distanceFromCamera
-//            && possibleSolution.y <= glm::length(e0) && possibleSolution.z <= glm::length(e1)) {
-//
-//            closestIntersection = RayTriangleIntersection(c + possibleSolution.x * direction, possibleSolution.x, triangle, i);
-//            break;
-//        }
 
         if (possibleSolution.y >= 0 && possibleSolution.z >= 0 &&
             possibleSolution.y <= 1 && possibleSolution.z <= 1 &&
