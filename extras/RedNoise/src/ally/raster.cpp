@@ -1,13 +1,13 @@
-#include <DrawingWindow.h>
-#include <Utils.h>
+#include "DrawingWindow.h"
+#include "Utils.h"
 #include <vector>
-#include <glm/glm.hpp>
-#include <CanvasTriangle.h>
-#include <Colour.h>
-#include <TextureMap.h>
-#include <TexturePoint.h>
-#include <ModelTriangle.h>
-#include <RayTriangleIntersection.h>
+#include "glm/glm.hpp"
+#include "CanvasTriangle.h"
+#include "Colour.h"
+#include "TextureMap.h"
+#include "TexturePoint.h"
+#include "ModelTriangle.h"
+#include "RayTriangleIntersection.h"
 // TODO : check if I can include this library
 #include <sstream>
 

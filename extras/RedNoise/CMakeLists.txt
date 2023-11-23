@@ -36,12 +36,12 @@ add_executable(RedNoise
         libs/sdw/TexturePoint.cpp
         libs/sdw/Utils.cpp
         src/DrawMain.cpp
-        libs/ally/obj_reader.h
-        libs/ally/obj_reader.cpp
-        libs/ally/raster.cpp
-        libs/ally/raster.h
-        libs/ally/camera_move.cpp
-        libs/ally/camera_move.h)
+        src/ally/obj_reader.h
+        src/ally/obj_reader.cpp
+        src/ally/raster.cpp
+        src/ally/raster.h
+        src/ally/camera_move.cpp
+        src/ally/camera_move.h)
 
 if (MSVC)
     target_compile_options(RedNoise

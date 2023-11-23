@@ -8,9 +8,9 @@
 #include <ModelTriangle.h>
 #include <RayTriangleIntersection.h>
 
-#include "../libs/ally/obj_reader.h"
-#include "../libs/ally/raster.h"
-#include "../libs/ally/camera_move.h"
+#include "ally/obj_reader.h"
+#include "ally/raster.h"
+#include "ally/camera_move.h"
 
 // TODO : check if it's allowed to use this library
 #include <unordered_map>
@@ -131,8 +131,9 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
         for (int y = 0; y < HEIGHT; y++) {
             glm::vec3 rayDirection = glm::normalize(o * glm::vec3((-0.5 + x/WIDTH - c.x) * (WIDTH/HEIGHT),  -0.5 + y/HEIGHT - c.y, f - c.z));
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
-            std::cout << x << "," << y << ":" << intersection.distanceFromCamera << std::endl;
-            if (intersection.distanceFromCamera != std::numeric_limits<float>::infinity()) {
+//            std::cout << x << "," << y << ":" << intersection.distanceFromCamera << std::endl;
+            std::cout << rayDirection.x << ", " <<rayDirection.y << ", " <<rayDirection.z << std::endl;
+            if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
                 Colour colour = triangle.colour;
                 window.setPixelColour(x, y, triangle.colour);
@@ -231,8 +232,8 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-//        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
-        drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
+        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+//        drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
         window.renderFrame();
     }
 
