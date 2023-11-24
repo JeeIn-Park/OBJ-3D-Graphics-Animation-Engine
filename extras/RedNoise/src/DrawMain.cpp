@@ -129,10 +129,18 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
 
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
-            glm::vec3 rayDirection = glm::normalize(o * glm::vec3((-0.5 + x/WIDTH - c.x) * (WIDTH/HEIGHT),  -0.5 + y/HEIGHT - c.y, f - c.z));
+//            glm::vec3 r = o * (v - c);
+//            int corrector = positiveOrNegative(c.z);
+//            return CanvasPoint(s/2 * f * corrector * r.x/r.z + WIDTH/2, s/2 * f * corrector * r.y/r.z + HEIGHT/2, 1/-r.z);
+//            dx = s/2 * f * corrector * vx/vz + WIDTH/2;
+//            vx = (dx - WIDTH/2) * 2 *vz /(s * f * corrector);
+//            vy = (dy - HEIGHT/2) * 2 *vz / (s*f*corrector);
+
+//            glm::vec3 rayDirection = glm::normalize(o * glm::vec3((-0.5 + x/WIDTH - c.x) * (WIDTH/HEIGHT),  -0.5 + y/HEIGHT - c.y, f - c.z));
+            glm::vec3 rayDirection (-(x - WIDTH/2)*c.z, -(y -HEIGHT/2)*c.z, -955);
+            rayDirection = glm::normalize(rayDirection - c);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
-//            std::cout << x << "," << y << ":" << intersection.distanceFromCamera << std::endl;
-            std::cout << rayDirection.x << ", " <<rayDirection.y << ", " <<rayDirection.z << std::endl;
+
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
                 Colour colour = triangle.colour;
@@ -232,8 +240,8 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
-//        drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
+//        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+        drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
         window.renderFrame();
     }
 
