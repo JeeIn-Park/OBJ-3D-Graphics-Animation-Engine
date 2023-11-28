@@ -20,13 +20,12 @@
 #define HEIGHT 240
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
-    std::vector<float> result;
-    result.push_back(from);
-
     float gap;
     int numberOfGap = numberOfValues - 1;
     gap = (to - from)/numberOfGap;
 
+    std::vector<float> result;
+    result.push_back(from);
     float x = from;
     for (int i = 0; i < (numberOfGap-1); ++i) {
         x = x + gap;
@@ -40,14 +39,12 @@ std::vector<float> interpolateSingleFloats(float from, float to, int numberOfVal
 
 
 std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 to, int numberOfValues){
-    std::vector<glm::vec3> result;
-    // result.push_back(from);
-
     std::vector<float> x_list = interpolateSingleFloats(from.x, to.x, numberOfValues);
     std::vector<float> y_list = interpolateSingleFloats(from.y, to.y, numberOfValues);
     std::vector<float> z_list = interpolateSingleFloats(from.z, to.z, numberOfValues);
 
     glm::vec3 vec;
+    std::vector<glm::vec3> result;
     for(int i = 0; i < numberOfValues; i ++){
         vec.x = x_list[i];
         vec.y = y_list[i];
@@ -88,50 +85,108 @@ CanvasTriangle randomTriangle() {
 
 
 /**
-   *  @param  c           camera position
-   *  @param  direction   ray direction
-   *  @param  obj         list of object facets
+   *  @param  obj  list of object facets
   */
-RayTriangleIntersection getClosestValidIntersection(glm::vec3 c, glm::vec3 direction, std::vector<ModelTriangle> obj) {
-    // search through the all the triangles in the current scene and return details of the closest intersected triangle
-    // (if indeed there is an intersection)
+RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, glm::vec3 rayDirection, std::vector<ModelTriangle> obj) {
+    rayDirection = glm::normalize(rayDirection - rayStartingPoint);
+
     RayTriangleIntersection closestIntersection;
     closestIntersection.distanceFromCamera = std::numeric_limits<float>::infinity();
+
     for (size_t i = 0; i < obj.size(); ++i) {
         ModelTriangle triangle = obj[i];
-        glm::vec3 SPVector = c - triangle.vertices[0];
+        glm::vec3 SPVector = rayStartingPoint - triangle.vertices[0];
         glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
         glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
-        glm::mat3 DEMatrix(-direction, e0, e1);
+        glm::mat3 DEMatrix(-rayDirection, e0, e1);
         glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
 
-        if (possibleSolution.x >= 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
+        if (possibleSolution.x > 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
             && possibleSolution.x <= closestIntersection.distanceFromCamera
             && possibleSolution.y <= 1 && possibleSolution.z <= 1
             && possibleSolution.y + possibleSolution.z <= 1)  {
-            closestIntersection = RayTriangleIntersection(possibleSolution, possibleSolution.x, triangle, i);
+
+            glm::vec3 intersection = triangle.vertices[0] + (possibleSolution.y * e0) + (possibleSolution.z * e1);
+            closestIntersection = RayTriangleIntersection(intersection, possibleSolution.x, triangle, i);
         }
     }
     return closestIntersection;
 }
 
 
+bool shadowPoint(glm::vec3 lightSource, glm::vec3 point, std::vector<ModelTriangle> obj){
+    const vec3 shadowRayDirection = normalize(lightPosition - point);
+    const float distance = distanceVec3(lightPosition, point);
+    float distanceVec3(const vec3 from, const vec3 to){
+        const vec3 d = from - to;
+        const float a = d[0] * d[0];
+        const float b = d[1] * d[1];
+        const float c = d[2] * d[2];
+        return sqrtf(a + b + c);
+    }
+
+    for (size_t i=0; i < obj.size(); i++) {
+        ModelTriangle triangle = obj[i];
+        glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
+        glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
+        glm::vec3 SPVector = point - triangle.vertices[0];
+        glm::mat3 DEMatrix(-rayDirection, e0, e1);
+        glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+
+        if ((possibleSolution.x > 0.0001) && (possibleSolution.x < distance)
+            && (0 <= possibleSolution.y) && (possibleSolution.y <= 1)
+            && (0 <= possibleSolution.z) && (possibleSolution.z <= 1)
+            && ((possibleSolution.y + possibleSolution.z) <= 1)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
+Colour fireLightRay(glm::vec3 lightSource, glm::vec3 rayDirection, int depth, std::vector<ModelTriangle> obj){
+    if (depth == std::numeric_limits<float>::infinity()) return Colour(255,255,255);
+
+    RayTriangleIntersection closestIntersection = getClosestValidIntersection(lightSource, rayDirection, obj);
+    Colour colour = closestIntersection.intersectedTriangle.colour;
+    glm::vec3 point = closestIntersection.intersectionPoint;
+
+    if (closestIntersection.distanceFromCamera <= 0) return Colour(0, 0, 0);
+
+    ModelTriangle triangle = closestIntersection.intersectedTriangle;
+
+    glm::vec3 lightDirection = normalize(lightSource - point);
+    glm::vec3 d = lightSource - point;
+    float distance = sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+    bool inShadow = shadowPoint(closestIntersection.intersectionPoint);
+    if (inShadow){
+        colour = Colour(0,0,0);
+    }
+    return colour;
+}
+
+
+Colour checkShadow(ModelTriangle triangle){
+
+}
+
 
 void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f, std::vector<ModelTriangle> obj){
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
             glm::vec3 rayDirection = glm::vec3 (WIDTH/2 - x, HEIGHT/2 - y, -HEIGHT);
-            rayDirection = glm::normalize(rayDirection - c);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
 
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
-                Colour colour = triangle.colour;
+                Colour colour = checkShadow(triangle);
                 window.setPixelColour(x, y, triangle.colour);
             }
         }
     }
 }
+
 
 
 
