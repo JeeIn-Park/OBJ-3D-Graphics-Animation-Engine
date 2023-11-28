@@ -18,15 +18,6 @@
 
 
 
-int positiveOrNegative(float value) {
-    if (value > 0) {
-        return 1;
-    } else if (value < 0) {
-        return -1;
-    } else {
-        return 0;
-    }
-}
 
 /**
    *  @param  c  cameraPosition
@@ -36,30 +27,8 @@ int positiveOrNegative(float value) {
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s) {
     glm::vec3 r = o * (v - c);
-    int corrector = positiveOrNegative(c.z);
-    return CanvasPoint(s/2 * f * corrector * r.x/r.z + WIDTH/2, s/2 * f * corrector * r.y/r.z + HEIGHT/2, 1/-r.z);
+    return CanvasPoint(s/2 * f  * r.x/r.z + WIDTH/2, s/2 * f  * r.y/r.z + HEIGHT/2, 1/-r.z);
 }
-
-
-//CanvasPoint getTexturedCanvasIntersectionPoint(glm::vec3 c, glm::mat3 o, CanvasPoint vertex, float f, float s, TextureMap texture) {
-//    glm::vec3 v = glm::vec3(vertex.x/WIDTH, vertex.y/HEIGHT, vertex.depth/100);
-//
-//    glm::vec3 rv = o * (v - c);
-//    CanvasPoint result = CanvasPoint(s / 2 * -f * rv.x / rv.z + WIDTH / 2,
-//                                     s / 2 *  f * rv.y / rv.z + HEIGHT / 2,
-//                                     1 / -rv.z);
-//
-//    TexturePoint t = TexturePoint(vertex.texturePoint.x/texture.width -0.5, vertex.texturePoint.y/texture.height -0.5);
-//    glm::vec3 rt = glm::vec3( 2 * t.x,  2 * t.y, v.z);
-//    rt = o * (rt - c);
-//    CanvasPoint textureResult = CanvasPoint( (texture.width/2) * f * rt.x / rt.z + texture.width/2,
-//                                             (texture.height/2) * - f * rt.y / rt.z + texture.height/2);
-//    result.texturePoint = TexturePoint(textureResult.x, textureResult.y);
-//
-////    uint32_t intColour = textureMap.pixels[textureResult.x + textureResult.y * textureMap.width];
-////    Colour((intColour >> 16) & 0xFF, (intColour >> 8) & 0xFF, intColour & 0xFF);
-//    return result;
-//}
 
 
 void lineDraw(DrawingWindow &window, CanvasPoint from, CanvasPoint to, Colour colour, float** &d){

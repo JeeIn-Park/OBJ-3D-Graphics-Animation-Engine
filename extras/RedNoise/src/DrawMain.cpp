@@ -126,7 +126,6 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 c, glm::vec3 direc
 }
 
 void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f, std::vector<ModelTriangle> obj){
-
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
 //            glm::vec3 r = o * (v - c);
@@ -136,8 +135,8 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
 //            vx = (dx - WIDTH/2) * 2 *vz /(s * f * corrector);
 //            vy = (dy - HEIGHT/2) * 2 *vz / (s*f*corrector);
 
-//            glm::vec3 rayDirection = glm::normalize(o * glm::vec3((-0.5 + x/WIDTH - c.x) * (WIDTH/HEIGHT),  -0.5 + y/HEIGHT - c.y, f - c.z));
-            glm::vec3 rayDirection (-(x - WIDTH/2)*c.z, -(y -HEIGHT/2)*c.z, -955);
+//           glm::vec3 rayDirection = glm::normalize(o * glm::vec3((-0.5 + x/WIDTH - c.x) * (WIDTH/HEIGHT),  -0.5 + y/HEIGHT - c.y, f - c.z));
+            glm::vec3 rayDirection = o * glm::vec3 (-(x - WIDTH/2)*c.z, -(y -HEIGHT/2)*c.z, -955);
             rayDirection = glm::normalize(rayDirection - c);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
 
@@ -240,8 +239,8 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-//        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
-        drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
+        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+//        drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
         window.renderFrame();
     }
 
