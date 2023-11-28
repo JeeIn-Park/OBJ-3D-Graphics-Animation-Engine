@@ -120,7 +120,7 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 c, glm::vec3 direc
 void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f, std::vector<ModelTriangle> obj){
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
-            glm::vec3 rayDirection = o * glm::vec3 (-(x - WIDTH/2)*c.z, -(y -HEIGHT/2)*c.z, -955);
+            glm::vec3 rayDirection = glm::vec3 (WIDTH/2 - x, HEIGHT/2 - y, -HEIGHT);
             rayDirection = glm::normalize(rayDirection - c);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
 
