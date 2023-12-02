@@ -223,7 +223,8 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                     x = x + vertices[i].x;
                     y = y + vertices[i].y;
                     z = z + vertices[i].z;
-                } x = x/verticesNumber; y = y/verticesNumber; z = z/verticesNumber;
+                } x = x/(2* verticesNumber); y = y/(2* verticesNumber); z = z/(2* verticesNumber);
+//                std::cout << verticesNumber << std::endl;
                 lightPosition = glm::vec3 (x, y, z);
             } else {
                 vertexSetSize = 0;
@@ -291,11 +292,9 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
 
 /**
-   *  @param  obj  list of object facets
+   *  @param  obj  : list of object facets
   */
 RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, glm::vec3 rayDirection, std::vector<ModelTriangle> obj) {
-    rayDirection = glm::normalize(rayDirection - rayStartingPoint);
-
     RayTriangleIntersection closestIntersection;
     closestIntersection.distanceFromCamera = std::numeric_limits<float>::infinity();
 
@@ -312,7 +311,7 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, 
             && possibleSolution.y <= 1 && possibleSolution.z <= 1
             && possibleSolution.y + possibleSolution.z <= 1)  {
 
-            glm::vec3 intersection = triangle.vertices[0] + (possibleSolution.y * e0) + (possibleSolution.z * e1);
+            glm::vec3 intersection = rayStartingPoint + possibleSolution.x * rayDirection;
             closestIntersection = RayTriangleIntersection(intersection, possibleSolution.x, triangle, i);
         }
     }
@@ -320,19 +319,22 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, 
 }
 
 
-Colour checkShadow(glm::vec3 intersectionOnScreen, ModelTriangle triangle, std::vector<ModelTriangle> obj){
+Colour checkShadow(glm::vec3 intersection, ModelTriangle triangle, std::vector<ModelTriangle> obj){
     Colour colour = triangle.colour;
+    std::cout << lightPosition.x << ", " << lightPosition.y << ", " << lightPosition.z << std::endl;
+    //std::cout << intersection.x << ", " << intersection.y << ", " << intersection.z << std::endl;
+    glm::vec3 light = glm::normalize( lightPosition - intersection);
+    float lightDistance = glm::length(lightPosition - intersection);
+    RayTriangleIntersection shadowIntersection = getClosestValidIntersection(   intersection, light, obj);
 
-    glm::vec3 lightRayDirection = lightPosition - intersectionOnScreen;
-    RayTriangleIntersection lightIntersection = getClosestValidIntersection(intersectionOnScreen, lightRayDirection, obj);
 
+//    glm::vec3 lightRayDirection = lightPosition - intersection;
+//    RayTriangleIntersection lightIntersection = getClosestValidIntersection(intersection, lightRayDirection, obj);
 
-    glm::vec3 d = lightPosition - intersectionOnScreen;
-    float distance = sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
-    std::cout << "distance : " << distance << std::endl;
-    std::cout << "Found distance : " << lightIntersection.distanceFromCamera << std::endl;
-    if (lightIntersection.distanceFromCamera > distance){
-        std::cout << "Found shadow point" << std::endl;
+//    glm::vec3 d = lightPosition - intersection;
+ //   float distance = sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+    if (shadowIntersection.distanceFromCamera <= lightDistance){
+        //std::cout << "Found shadow point" << std::endl;
         colour = Colour(0,0,0);
     }
     return colour;
@@ -342,7 +344,8 @@ Colour checkShadow(glm::vec3 intersectionOnScreen, ModelTriangle triangle, std::
 void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f, std::vector<ModelTriangle> obj){
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
-            glm::vec3 rayDirection = glm::vec3 (WIDTH/2 - x, HEIGHT/2 - y, -HEIGHT);
+            glm::vec3 rayDirection = glm::vec3 (-WIDTH/2 + x, HEIGHT/2 - y, -f*HEIGHT/2);
+            rayDirection = glm::normalize(rayDirection - c);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
 
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
