@@ -1,3 +1,5 @@
+#include "raster.h"
+
 #include "DrawingWindow.h"
 #include "Utils.h"
 #include <vector>
@@ -7,11 +9,6 @@
 #include "TextureMap.h"
 #include "TexturePoint.h"
 #include "ModelTriangle.h"
-#include "RayTriangleIntersection.h"
-// TODO : check if I can include this library
-#include <sstream>
-
-#include "raster.h"
 
 #define WIDTH 320
 #define HEIGHT 240

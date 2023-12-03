@@ -1,34 +1,18 @@
 #pragma once
-
-#include "DrawingWindow.h"
-#include "Utils.h"
-#include <vector>
-#include "glm/glm.hpp"
-#include "CanvasTriangle.h"
-#include "Colour.h"
-#include "TextureMap.h"
-#include "TexturePoint.h"
-#include "ModelTriangle.h"
-#include "RayTriangleIntersection.h"
-// TODO : check if I can include this library
-#include <sstream>
-
-#pragma once
-
-#include "DrawingWindow.h"
-#include "Utils.h"
-#include <vector>
-#include "glm/glm.hpp"
-#include "CanvasTriangle.h"
-#include "Colour.h"
-#include "TextureMap.h"
-#include "TexturePoint.h"
-#include "ModelTriangle.h"
-#include "RayTriangleIntersection.h"
-// TODO : check if I can include this library
-#include <sstream>
-
 #include "raster.h"
+
+#include "DrawingWindow.h"
+#include "Utils.h"
+#include <vector>
+#include "glm/glm.hpp"
+#include "CanvasTriangle.h"
+#include "Colour.h"
+#include "TextureMap.h"
+#include "TexturePoint.h"
+#include "ModelTriangle.h"
+#include "RayTriangleIntersection.h"
+// TODO : check if I can include this library
+#include <sstream>
 
 int positiveOrNegative(float value);
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s);

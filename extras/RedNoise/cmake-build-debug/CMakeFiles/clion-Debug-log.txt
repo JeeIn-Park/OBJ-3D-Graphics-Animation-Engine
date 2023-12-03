@@ -1,4 +1,16 @@
 /snap/clion/250/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/snap/clion/250/bin/ninja/linux/x64/ninja -G Ninja -S /home/jeein/Documents/CG/computer_graphics/extras/RedNoise -B /home/jeein/Documents/CG/computer_graphics/extras/RedNoise/cmake-build-debug
 -- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /home/jeein/Documents/CG/computer_graphics/extras/RedNoise/cmake-build-debug
+CMake Error at CMakeLists.txt:28 (add_executable):
+  Cannot find source file:
+
+    src/ally/obj_reader.h
+
+  Tried extensions .c .C .c++ .cc .cpp .cxx .cu .mpp .m .M .mm .ixx .cppm .h
+  .hh .h++ .hm .hpp .hxx .in .txx .f .F .for .f77 .f90 .f95 .f03 .hip .ispc
+
+
+CMake Error at CMakeLists.txt:28 (add_executable):
+  No SOURCES given to target: RedNoise
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.
