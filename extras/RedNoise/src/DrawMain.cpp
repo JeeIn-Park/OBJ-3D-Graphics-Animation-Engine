@@ -208,9 +208,6 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             textures.push_back(texture);
             vertexSetSize = vertexSetSize - 1;
             assignTexture = true;
-//            std::cout << vertices.size() << std::endl;
-//            std::cout << vertexSetSize << std::endl;
-//            std::cout << texture.z << std::endl;
         }
 
 
@@ -223,69 +220,50 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                     x = x + vertices[i].x;
                     y = y + vertices[i].y;
                     z = z + vertices[i].z;
-                } x = x/(2* verticesNumber); y = y/(2* verticesNumber); z = z/(2* verticesNumber);
-//                std::cout << verticesNumber << std::endl;
-                lightPosition = glm::vec3 (x, y, z);
-            } else {
-                vertexSetSize = 0;
-                std::string vertex;
-                std::array<int, 3> vertexIndices;
+                }
+                x = x / (2 * verticesNumber);
+                y = y / (2 * verticesNumber);
+                z = z / (2 * verticesNumber);
+                lightPosition = glm::vec3(x, y, z);
+            }
+
+            vertexSetSize = 0;
+            std::string vertex;
+            std::array<int, 3> vertexIndices;
 
                 // extract vertex indices and put it in vertexIndices
-                for (int i = 0; i < 3; ++i) {
-                    iss >> vertex;
-                    size_t pos = vertex.find('/');
-                    if (pos != std::string::npos) { // TODO : npos study
-                        vertex = vertex.substr(0, pos);
-                    }
-                    vertexIndices[i] = std::stoi(vertex) - 1;
+            for (int i = 0; i < 3; ++i) {
+                iss >> vertex;
+                size_t pos = vertex.find('/');
+                if (pos != std::string::npos) { // TODO : npos study
+                    vertex = vertex.substr(0, pos);
                 }
+                vertexIndices[i] = std::stoi(vertex) - 1;
+            }
 
                 // when all vertex indices are valid
-                if (vertexIndices[0] >= 0 && vertexIndices[1] >= 0 && vertexIndices[2] >= 0) {
-                    ModelTriangle triangle;
-                    for (int i = 0; i < 3; ++i) {
-                        triangle.vertices[i] = vertices[vertexIndices[i]];
-                        if (assignTexture) {
-                            for (size_t j = 0; j < textures.size(); ++j) {
-                                if (textures[j].z == vertexIndices[i]) {
-                                    triangle.texturePoints[i] = TexturePoint(textures[j].y, textures[j].x);
-//                            std::cout << "texture assigned" << std::endl;
-                                }
+            if (vertexIndices[0] >= 0 && vertexIndices[1] >= 0 && vertexIndices[2] >= 0) {
+                ModelTriangle triangle;
+                for (int i = 0; i < 3; ++i) {
+                    triangle.vertices[i] = vertices[vertexIndices[i]];
+                    if (assignTexture) {
+                        for (size_t j = 0; j < textures.size(); ++j) {
+                            if (textures[j].z == vertexIndices[i]) {
+                                triangle.texturePoints[i] = TexturePoint(textures[j].y, textures[j].x);
                             }
-                        } else {
-                            triangle.texturePoints[i] = TexturePoint(-1, -1);
                         }
+                    } else {
+                        triangle.texturePoints[i] = TexturePoint(-1, -1);
                     }
-                    triangle.colour = currentColour;
-                    triangles.push_back(triangle);
                 }
+                triangle.colour = currentColour;
+                triangles.push_back(triangle);
 
-
-//            int bookMark = 0;
-//            int currentTextureBook = textures[0].z;
-//            for (size_t i = 0; i < textures.size(); ++i) {
-//                if (textures[i].z == currentTextureBook){
-//
-//                } else {
-//                    bookMark = 0;
-//                    currentTextureBook = textures[i].z;
-//
-//                    //TODO : make it possible to assign texture point if there are multiple textures as well
-//                }
-//            }
             }
         }
 
     }
     objFile.close();
-
-//    for (const glm::vec3 & vertex : vertices) {
-//        std::cout << vertex.x << "," << vertex.y << "," << vertex.z << std::endl;
-//    }
-//    for (const ModelTriangle& triangle : triangles) {
-//        std::cout << triangle << std::endl;
-//    }
     return triangles;
 }
 
@@ -321,18 +299,10 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, 
 
 Colour checkShadow(glm::vec3 intersection, ModelTriangle triangle, std::vector<ModelTriangle> obj){
     Colour colour = triangle.colour;
-    std::cout << lightPosition.x << ", " << lightPosition.y << ", " << lightPosition.z << std::endl;
-    //std::cout << intersection.x << ", " << intersection.y << ", " << intersection.z << std::endl;
     glm::vec3 light = glm::normalize( lightPosition - intersection);
     float lightDistance = glm::length(lightPosition - intersection);
     RayTriangleIntersection shadowIntersection = getClosestValidIntersection(   intersection, light, obj);
 
-
-//    glm::vec3 lightRayDirection = lightPosition - intersection;
-//    RayTriangleIntersection lightIntersection = getClosestValidIntersection(intersection, lightRayDirection, obj);
-
-//    glm::vec3 d = lightPosition - intersection;
- //   float distance = sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
     if (shadowIntersection.distanceFromCamera <= lightDistance){
         //std::cout << "Found shadow point" << std::endl;
         colour = Colour(0,0,0);
