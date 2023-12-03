@@ -272,7 +272,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 /**
    *  @param  obj  : list of object facets
   */
-RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, glm::vec3 rayDirection, std::vector<ModelTriangle> obj) {
+RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, glm::vec3 rayDirection, std::vector<ModelTriangle> obj, bool shadow) {
     RayTriangleIntersection closestIntersection;
     closestIntersection.distanceFromCamera = std::numeric_limits<float>::infinity();
 
@@ -283,6 +283,8 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, 
         glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
         glm::mat3 DEMatrix(-rayDirection, e0, e1);
         glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+
+        if (shadow && possibleSolution.x < 0.001f ) continue;
 
         if (possibleSolution.x > 0 && possibleSolution.y >= 0 && possibleSolution.z >= 0
             && possibleSolution.x <= closestIntersection.distanceFromCamera
@@ -301,7 +303,7 @@ Colour checkShadow(glm::vec3 intersection, ModelTriangle triangle, std::vector<M
     Colour colour = triangle.colour;
     glm::vec3 light = glm::normalize( lightPosition - intersection);
     float lightDistance = glm::length(lightPosition - intersection);
-    RayTriangleIntersection shadowIntersection = getClosestValidIntersection(   intersection, light, obj);
+    RayTriangleIntersection shadowIntersection = getClosestValidIntersection( intersection, light, obj, true);
 
     if (shadowIntersection.distanceFromCamera <= lightDistance){
         //std::cout << "Found shadow point" << std::endl;
@@ -316,7 +318,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
         for (int y = 0; y < HEIGHT; y++) {
             glm::vec3 rayDirection = glm::vec3 (-WIDTH/2 + x, HEIGHT/2 - y, -f*HEIGHT/2);
             rayDirection = glm::normalize(rayDirection - c);
-            RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj);
+            RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj, false);
 
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
@@ -425,7 +427,7 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-//        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, 240, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
         drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
         window.renderFrame();
     }
