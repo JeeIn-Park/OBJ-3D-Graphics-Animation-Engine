@@ -138,7 +138,8 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
             glm::vec3 rayDirection = glm::vec3 (-WIDTH/2 + x, HEIGHT/2 - y, -f*HEIGHT/2);
-            rayDirection = glm::normalize(rayDirection - c);
+            rayDirection = o * (rayDirection - c);
+            rayDirection = glm::normalize(rayDirection);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj, false);
 
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
@@ -248,7 +249,7 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+//        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
         drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
         window.renderFrame();
     }
