@@ -24,7 +24,7 @@
   */
 CanvasPoint getCanvasIntersectionPoint (glm::vec3 c, glm::mat3 o, glm::vec3 v, float f, float s) {
     glm::vec3 r = o * (v - c);
-    return CanvasPoint(s/2 * f  * r.x/r.z + WIDTH/2, s/2 * f  * r.y/r.z + HEIGHT/2, 1/-r.z);
+    return CanvasPoint(-s/2 * f  * r.x/r.z + WIDTH/2, s/2 * f  * r.y/r.z + HEIGHT/2, 1/-r.z);
 }
 
 

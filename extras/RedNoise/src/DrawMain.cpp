@@ -135,11 +135,13 @@ Colour checkShadow(glm::vec3 intersection, ModelTriangle triangle, std::vector<M
 
 
 void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f, std::vector<ModelTriangle> obj){
+    window.clearPixels();
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
             glm::vec3 rayDirection = glm::vec3 (-WIDTH/2 + x, HEIGHT/2 - y, -f*HEIGHT/2);
-            rayDirection = o * (rayDirection - c);
-            rayDirection = glm::normalize(rayDirection);
+//            glm::vec3 rayDirection = o * glm::vec3 (2*x/HEIGHT - 2*WIDTH/HEIGHT, 1 - 2*y/HEIGHT, -f);
+            rayDirection = glm::normalize(rayDirection - c);
+            rayDirection = glm::normalize(glm::inverse(o) * rayDirection);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj, false);
 
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
@@ -171,11 +173,11 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         else if (event.key.keysym.sym == SDLK_w) rotate(c,'w');
         else if (event.key.keysym.sym == SDLK_s) rotate(c,'s');
 
-        //orientation
-        else if (event.key.keysym.sym == SDLK_KP_1) { orientRotate(o, '1');}
-        else if (event.key.keysym.sym == SDLK_KP_3) { orientRotate(o, '3');}
-        else if (event.key.keysym.sym == SDLK_KP_5) { orientRotate(o, '5');}
-        else if (event.key.keysym.sym == SDLK_KP_2) { orientRotate(o, '2');}
+//        //orientation
+//        else if (event.key.keysym.sym == SDLK_KP_1) { orientRotate(o, '1');}
+//        else if (event.key.keysym.sym == SDLK_KP_3) { orientRotate(o, '3');}
+//        else if (event.key.keysym.sym == SDLK_KP_5) { orientRotate(o, '5');}
+//        else if (event.key.keysym.sym == SDLK_KP_2) { orientRotate(o, '2');}
 
         else if (event.key.keysym.sym == SDLK_q) return true;
         else if (event.key.keysym.sym == SDLK_SPACE) *p = !*p;
