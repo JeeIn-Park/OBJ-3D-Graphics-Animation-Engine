@@ -51,7 +51,7 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
 //            std::cout << "RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << std::endl;
 
             if (rgb[0] >= 0 && rgb[1] >= 0 && rgb[2] >= 0) {
-                colourMap[colourName] = Colour(255 * rgb[0], 255 * rgb[1], 255 * rgb[2]);
+                colourMap[colourName] = Colour(colourName ,255 * rgb[0], 255 * rgb[1], 255 * rgb[2]);
             }
 
         }
@@ -187,6 +187,9 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                         triangle.texturePoints[i] = TexturePoint(-1, -1);
                     }
                 }
+                glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
+                glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
+                triangle.normal = glm::normalize(glm::cross(e0,e1));
                 triangle.colour = currentColour;
                 triangles.push_back(triangle);
 

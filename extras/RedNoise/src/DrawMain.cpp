@@ -7,10 +7,6 @@
 #include <TexturePoint.h>
 #include <ModelTriangle.h>
 #include <RayTriangleIntersection.h>
-#include <fstream>
-
-// TODO : check if I can include this library
-#include <sstream>
 
 #include "ally/raster.h"
 #include "ally/camera_move.h"
@@ -89,6 +85,13 @@ CanvasTriangle randomTriangle() {
 }
 
 
+Colour proximityLighting (Colour colour, float distance) {
+    // 0.0 (total darkness)
+    // 1.0 (fully illuminated)
+    float lighting = 1/(4 * M_PI * distance * distance);
+    return Colour (lighting * colour.red, lighting * colour.green, lighting * colour.blue);
+}
+
 
 /**
    *  @param  obj  : list of object facets
@@ -146,8 +149,21 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
 
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
-                Colour colour = checkShadow(intersection.intersectionPoint, triangle, obj);
-                window.setPixelColour(x, y, colour);
+                if (triangle.colour.name == "Magenta") {
+                    glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
+                    glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
+                    RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
+                    if (reflectedInt.distanceFromCamera < std::numeric_limits<float>::infinity()) {
+                        ModelTriangle reflectedT = intersection.intersectedTriangle;
+                        Colour colour = checkShadow(reflectedInt.intersectionPoint, reflectedT, obj);
+                        window.setPixelColour(x, y, colour);
+                    }
+
+                }
+                else {
+                    Colour colour = checkShadow(intersection.intersectionPoint, triangle, obj);
+                    window.setPixelColour(x, y, colour);
+                }
             }
         }
     }
