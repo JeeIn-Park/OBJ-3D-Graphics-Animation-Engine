@@ -109,11 +109,8 @@ Colour specularLighting(Colour colour, glm::vec3 intersection, ModelTriangle& tr
 
     float specularFactor = glm::dot(reflectionDirection, -cameraRayDirection);
     specularFactor = glm::max(specularFactor, 0.0f);
-    specularFactor = pow(specularFactor, specularExponent);
-
-    float lighting = specularFactor;
+    float lighting = pow(specularFactor, specularExponent);
     if (lighting < 0.2) { lighting = 0.2; } else if (lighting > 1) { lighting = 1; }
-
     return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
 }
 
