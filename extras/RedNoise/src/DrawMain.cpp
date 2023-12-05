@@ -266,7 +266,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
 
-                if (reflect && triangle.colour.name == "Magenta") {
+                if (reflect && triangle.colour.name == "Cyan") {
                     glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
                     glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
                     RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
@@ -274,7 +274,19 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                         ModelTriangle reflectedT = reflectedInt.intersectedTriangle;
                         Colour OriginalColour = triangle.colour;
                         Colour ReflectedColour = reflectedInt.intersectedTriangle.colour;
-                        Colour colour = Colour((OriginalColour.red + ReflectedColour.red)/2, (OriginalColour.green + ReflectedColour.red)/2, (OriginalColour.blue + ReflectedColour.red)/2);
+                        Colour colour = Colour((OriginalColour.red + ReflectedColour.red)/2, (OriginalColour.green + ReflectedColour.green)/2, (OriginalColour.blue + ReflectedColour.blue)/2);
+                        colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle.normal, reflected, obj);
+                        window.setPixelColour(x, y, colour);
+                    }
+                } else if (reflect && triangle.colour.name == "Blue") {
+                    glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
+                    glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
+                    RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
+                    if (reflectedInt.distanceFromCamera < std::numeric_limits<float>::infinity()) {
+                        ModelTriangle reflectedT = reflectedInt.intersectedTriangle;
+//                        Colour OriginalColour = triangle.colour;
+                        Colour ReflectedColour = reflectedInt.intersectedTriangle.colour;
+                        Colour colour = Colour((ReflectedColour.red)*0.8, (ReflectedColour.green)*0.8, (ReflectedColour.blue)*0.8);
                         colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle.normal, reflected, obj);
                         window.setPixelColour(x, y, colour);
                     }
