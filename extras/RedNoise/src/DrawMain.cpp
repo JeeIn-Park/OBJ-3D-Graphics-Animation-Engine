@@ -19,7 +19,7 @@
 #define WIDTH 320
 #define HEIGHT 240
 
-glm::vec3 lightPosition = glm::vec3(0.0, 0.4, 0.4);
+glm::vec3 lightPosition = glm::vec3(0.0, 0.4, 0.1);
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     float gap;
@@ -85,10 +85,11 @@ CanvasTriangle randomTriangle() {
 }
 
 
-Colour proximityLighting (Colour colour, float distance) {
-    // 0.0 (total darkness)
-    // 1.0 (fully illuminated)
-    float lighting = 1/(4 * M_PI * distance * distance);
+Colour proximityLighting (Colour colour, glm::vec3 intersection) {
+    float distance = glm::length(lightPosition - intersection);
+    float maxDistance = glm::length(lightPosition - glm::vec3(1,1,1));
+    float lighting =  (maxDistance * maxDistance)/(distance * distance);
+    if (lighting < 0.2) lighting = 0.2;
     return Colour (lighting * colour.red, lighting * colour.green, lighting * colour.blue);
 }
 
@@ -156,12 +157,14 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                     if (reflectedInt.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                         ModelTriangle reflectedT = intersection.intersectedTriangle;
                         Colour colour = checkShadow(reflectedInt.intersectionPoint, reflectedT, obj);
+                        colour = proximityLighting(colour, intersection.intersectionPoint);
                         window.setPixelColour(x, y, colour);
                     }
 
                 }
                 else {
                     Colour colour = checkShadow(intersection.intersectionPoint, triangle, obj);
+                    colour = proximityLighting(colour, intersection.intersectionPoint);
                     window.setPixelColour(x, y, colour);
                 }
             }
@@ -188,12 +191,6 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         else if (event.key.keysym.sym == SDLK_d) rotate(c,'d');
         else if (event.key.keysym.sym == SDLK_w) rotate(c,'w');
         else if (event.key.keysym.sym == SDLK_s) rotate(c,'s');
-
-//        //orientation
-//        else if (event.key.keysym.sym == SDLK_KP_1) { orientRotate(o, '1');}
-//        else if (event.key.keysym.sym == SDLK_KP_3) { orientRotate(o, '3');}
-//        else if (event.key.keysym.sym == SDLK_KP_5) { orientRotate(o, '5');}
-//        else if (event.key.keysym.sym == SDLK_KP_2) { orientRotate(o, '2');}
 
         else if (event.key.keysym.sym == SDLK_q) return true;
         else if (event.key.keysym.sym == SDLK_SPACE) *p = !*p;
