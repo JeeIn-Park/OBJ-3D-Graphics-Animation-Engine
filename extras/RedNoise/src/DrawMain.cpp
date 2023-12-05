@@ -19,7 +19,7 @@
 #define WIDTH 320
 #define HEIGHT 240
 
-glm::vec3 lightPosition = glm::vec3(0.0, 0.4, 0.1);
+glm::vec3 lightPosition = glm::vec3(0.0, 0.5, 0.1);
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     float gap;
@@ -86,10 +86,10 @@ CanvasTriangle randomTriangle() {
 
 
 Colour proximityLighting (Colour colour, glm::vec3 intersection) {
-    float distance = glm::length(lightPosition - intersection);
-    float maxDistance = glm::length(lightPosition - glm::vec3(1,1,1));
-    float lighting =  (maxDistance * maxDistance)/(distance * distance);
-    if (lighting < 0.2) lighting = 0.2;
+    float distance = glm::length(lightPosition - intersection) +1;
+    float lighting = 10*(1/( M_PI * distance * distance));
+    std::cout << lighting << std::endl;
+    if (lighting < 0.2) { lighting = 0.2; } else if (lighting > 1) { lighting = 1; }
     return Colour (lighting * colour.red, lighting * colour.green, lighting * colour.blue);
 }
 
