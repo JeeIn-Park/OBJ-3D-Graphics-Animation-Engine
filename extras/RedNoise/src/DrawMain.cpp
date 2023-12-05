@@ -26,7 +26,7 @@ bool proximityLight = true;
 bool angleOfIncidenceLight = true;
 bool specularLight = true;
 bool shadowLight = true;
-bool reflect = false;
+bool reflect = true;
 
 void lightInitialisation(std::vector<ModelTriangle> obj) {
     lightPositions.clear();
@@ -47,6 +47,7 @@ void lightInitialisation(std::vector<ModelTriangle> obj) {
         }
     }
     lightPositionsMean = lightPositionsMean/(2*verticesNumber);
+    lightPositions.push_back(lightPositionsMean);
     lightSource = lightPositionsMean;
     std::cout << lightSource.x << "," << lightSource.y << "," << lightSource.z << std::endl;
 //    std::cout << lightSource << std::endl;
@@ -120,7 +121,7 @@ CanvasTriangle randomTriangle() {
 
 float proximityLighting (glm::vec3 intersection) {
     float distance = glm::length(lightSource - intersection) +1;
-    float lighting = 40*(1/( 4 * M_PI * distance * distance));
+    float lighting = 50*(1/( 4 * M_PI * distance * distance));
     return lighting;
 }
 
@@ -271,7 +272,9 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                     RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
                     if (reflectedInt.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                         ModelTriangle reflectedT = reflectedInt.intersectedTriangle;
-                        Colour colour = reflectedInt.intersectedTriangle.colour;
+                        Colour OriginalColour = triangle.colour;
+                        Colour ReflectedColour = reflectedInt.intersectedTriangle.colour;
+                        Colour colour = Colour((OriginalColour.red + ReflectedColour.red)/2, (OriginalColour.green + ReflectedColour.red)/2, (OriginalColour.blue + ReflectedColour.red)/2);
                         colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle.normal, reflected, obj);
                         window.setPixelColour(x, y, colour);
                     }
