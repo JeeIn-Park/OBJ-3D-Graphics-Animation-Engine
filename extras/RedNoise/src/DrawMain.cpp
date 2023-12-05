@@ -103,6 +103,21 @@ Colour angleOfIncidenceLighting (Colour colour, glm::vec3 intersection, ModelTri
 }
 
 
+Colour specularLighting(Colour colour, glm::vec3 intersection, ModelTriangle& triangle, glm::vec3 cameraRayDirection, float specularExponent) {
+    glm::vec3 lightDirection = glm::normalize(lightPosition - intersection);
+    glm::vec3 reflectionDirection = glm::reflect(-lightDirection, triangle.normal);
+
+    float specularFactor = glm::dot(reflectionDirection, -cameraRayDirection);
+    specularFactor = glm::max(specularFactor, 0.0f);
+    specularFactor = pow(specularFactor, specularExponent);
+
+    float lighting = specularFactor;
+    if (lighting < 0.2) { lighting = 0.2; } else if (lighting > 1) { lighting = 1; }
+
+    return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
+}
+
+
 
 /**
    *  @param  obj  : list of object facets
@@ -169,7 +184,8 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                         ModelTriangle reflectedT = intersection.intersectedTriangle;
                         Colour colour = checkShadow(reflectedInt.intersectionPoint, reflectedT, obj);
 //                        colour = proximityLighting(colour, intersection.intersectionPoint);
-                        colour = angleOfIncidenceLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle);
+//                        colour = angleOfIncidenceLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle);
+                        colour = specularLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle, rayDirection, 64);
                         window.setPixelColour(x, y, colour);
                     }
 
@@ -177,7 +193,9 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                 else {
                     Colour colour = checkShadow(intersection.intersectionPoint, triangle, obj);
 //                    colour = proximityLighting(colour, intersection.intersectionPoint);
-                    colour = angleOfIncidenceLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle);
+//                    colour = angleOfIncidenceLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle);
+                    colour = specularLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle, rayDirection, 64);
+
                     window.setPixelColour(x, y, colour);
                 }
             }
