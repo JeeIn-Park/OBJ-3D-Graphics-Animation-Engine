@@ -19,7 +19,7 @@
 #define WIDTH 320
 #define HEIGHT 240
 
-glm::vec3 lightPosition = glm::vec3(0.0, 0.5, 0.1);
+glm::vec3 lightPosition = glm::vec3(0.0, 0.5, 0.25);
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
     float gap;
@@ -94,6 +94,16 @@ Colour proximityLighting (Colour colour, glm::vec3 intersection) {
 }
 
 
+Colour angleOfIncidenceLighting (Colour colour, glm::vec3 intersection, ModelTriangle triangle) {
+    glm::vec3 lightDirection = glm::normalize(lightPosition - intersection);
+    float lighting = glm::dot(triangle.normal, lightDirection);
+    std::cout << lighting << std::endl;
+//    if (lighting < 0.2) { lighting = 0.2; } else if (lighting > 1) { lighting = 1; }
+    return Colour (lighting * colour.red, lighting * colour.green, lighting * colour.blue);
+}
+
+
+
 /**
    *  @param  obj  : list of object facets
   */
@@ -150,6 +160,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
 
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
+
                 if (triangle.colour.name == "Magenta") {
                     glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
                     glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
@@ -157,14 +168,16 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                     if (reflectedInt.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                         ModelTriangle reflectedT = intersection.intersectedTriangle;
                         Colour colour = checkShadow(reflectedInt.intersectionPoint, reflectedT, obj);
-                        colour = proximityLighting(colour, intersection.intersectionPoint);
+//                        colour = proximityLighting(colour, intersection.intersectionPoint);
+                        colour = angleOfIncidenceLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle);
                         window.setPixelColour(x, y, colour);
                     }
 
                 }
                 else {
                     Colour colour = checkShadow(intersection.intersectionPoint, triangle, obj);
-                    colour = proximityLighting(colour, intersection.intersectionPoint);
+//                    colour = proximityLighting(colour, intersection.intersectionPoint);
+                    colour = angleOfIncidenceLighting(colour, intersection.intersectionPoint, intersection.intersectedTriangle);
                     window.setPixelColour(x, y, colour);
                 }
             }
