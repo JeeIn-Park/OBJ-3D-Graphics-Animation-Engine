@@ -22,7 +22,6 @@
 
 std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     std::unordered_map<std::string, Colour> colourMap;
-
     std::string line;
     std::ifstream mtlFile(filename);
     std::string colourName;
@@ -144,19 +143,19 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
             // f - face
         else if (token == "f") {
-            if (assignLight) {
-                float x, y, z;
-                size_t verticesNumber = vertices.size();
-                for (size_t i = 0; i < verticesNumber; ++i) {
-                    x = x + vertices[i].x;
-                    y = y + vertices[i].y;
-                    z = z + vertices[i].z;
-                }
-                x = x / (2 * verticesNumber);
-                y = y / (2 * verticesNumber);
-                z = z / (2 * verticesNumber);
-//                lightPosition = glm::vec3(x, y, z);
-            }
+//            if (assignLight) {
+//                float x, y, z;
+//                size_t verticesNumber = vertices.size();
+//                for (size_t i = 0; i < verticesNumber; ++i) {
+//                    x = x + vertices[i].x;
+//                    y = y + vertices[i].y;
+//                    z = z + vertices[i].z;
+//                }
+//                x = x / (2 * verticesNumber);
+//                y = y / (2 * verticesNumber);
+//                z = z / (2 * verticesNumber);
+//              lightPosition = glm::vec3(x, y, z);
+//            }
 
             vertexSetSize = 0;
             std::string vertex;
