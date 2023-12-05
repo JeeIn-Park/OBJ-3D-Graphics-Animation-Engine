@@ -87,7 +87,7 @@ CanvasTriangle randomTriangle() {
 
 Colour proximityLighting (Colour colour, glm::vec3 intersection) {
     float distance = glm::length(lightPosition - intersection) +1;
-    float lighting = 10*(1/( M_PI * distance * distance));
+    float lighting = 30*(1/( 4 * M_PI * distance * distance));
     std::cout << lighting << std::endl;
     if (lighting < 0.2) { lighting = 0.2; } else if (lighting > 1) { lighting = 1; }
     return Colour (lighting * colour.red, lighting * colour.green, lighting * colour.blue);
