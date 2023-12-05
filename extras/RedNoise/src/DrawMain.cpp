@@ -16,16 +16,22 @@
 #include <unordered_map>
 #include <thread>
 
-#define WIDTH 320
-#define HEIGHT 240
+#define WIDTH 640
+#define HEIGHT 480
 
 glm::vec3 lightSource = glm::vec3(0.0, 0.5, 0.25);
 std::vector<glm::vec3> lightPositions;
 
+bool proximityLight = true;
+bool angleOfIncidenceLight = true;
+bool specularLight = true;
+bool shadowLight = true;
+bool reflect = false;
+
 void lightInitialisation(std::vector<ModelTriangle> obj) {
     lightPositions.clear();
     glm::vec3 lightPositionsMean;
-    float verticesNumber;
+    float verticesNumber = 0;
     for (const auto& face : obj){
         if(face.colour.name == "White"){
             lightPositionsMean += face.vertices[0];
@@ -37,7 +43,6 @@ void lightInitialisation(std::vector<ModelTriangle> obj) {
             lightPositionsMean += face.vertices[2];
             lightPositions.push_back(0.5f * face.vertices[2]);
             lightPositions.push_back(0.25f * face.vertices[2] + 0.25f * face.vertices[0]);
-
             verticesNumber += 6;
         }
     }
@@ -113,46 +118,30 @@ CanvasTriangle randomTriangle() {
 }
 
 
-Colour proximityLighting (Colour colour, glm::vec3 intersection) {
+float proximityLighting (glm::vec3 intersection) {
     float distance = glm::length(lightSource - intersection) +1;
-    float lighting = 30*(1/( 4 * M_PI * distance * distance));
-    std::cout << lighting << std::endl;
-    return Colour (lighting * colour.red, lighting * colour.green, lighting * colour.blue);
+    float lighting = 40*(1/( 4 * M_PI * distance * distance));
+    return lighting;
 }
 
 
-Colour angleOfIncidenceLighting (Colour colour, glm::vec3 intersection, ModelTriangle triangle) {
+float angleOfIncidenceLighting (glm::vec3 intersection, glm::vec3 normal) {
     glm::vec3 lightDirection = glm::normalize(lightSource - intersection);
-    float lighting = glm::dot(triangle.normal, lightDirection);
-    std::cout << lighting << std::endl;
-    return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
-
+    float lighting = glm::dot(normal, lightDirection);
+    return lighting;
 }
 
 
-Colour specularLighting(Colour colour, glm::vec3 intersection, ModelTriangle& triangle, glm::vec3 cameraRayDirection, float specularExponent) {
+float specularLighting(glm::vec3 intersection, glm::vec3 normal, glm::vec3 cameraRayDirection) {
     glm::vec3 lightDirection = glm::normalize(lightSource - intersection);
-    glm::vec3 reflectionDirection = glm::reflect(-lightDirection, triangle.normal);
+    glm::vec3 reflectionDirection = glm::reflect(-lightDirection, normal);
 
     float specularFactor = glm::dot(reflectionDirection, -cameraRayDirection);
     specularFactor = glm::max(specularFactor, 0.0f);
-    float lighting = pow(specularFactor, specularExponent);
-    std::cout << lighting << std::endl;
-    return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
+    float lighting = pow(specularFactor, 64); //specular exponent
+    return lighting;
 }
 
-
-Colour AmbientLighting(Colour colour, std::vector<float> lightingFactors, float ambientThreshold) {
-    if (lightingFactors.empty()) {return Colour(0,0,0);}
-    float s = 0.0f;
-    for (const float& factor : lightingFactors) {s += factor;}
-
-    float lighting = s / lightingFactors.size();
-
-    if (lighting < ambientThreshold) {lighting = ambientThreshold;} else if(lighting > 1) {lighting = 1;}
-    std::cout << lighting << std::endl;
-    return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
-}
 
 
 /**
@@ -185,18 +174,18 @@ RayTriangleIntersection getClosestValidIntersection(glm::vec3 rayStartingPoint, 
 }
 
 
-Colour hardShadow(Colour colour, glm::vec3 intersection, ModelTriangle triangle, std::vector<ModelTriangle> obj){
-    glm::vec3 light = glm::normalize( lightSource - intersection);
-    float lightDistance = glm::length( lightSource - intersection);
-    RayTriangleIntersection shadowIntersection = getClosestValidIntersection( intersection, light, obj, true);
+//Colour hardShadow(Colour colour, glm::vec3 intersection, std::vector<ModelTriangle> obj){
+//    glm::vec3 light = glm::normalize( lightSource - intersection);
+//    float lightDistance = glm::length( lightSource - intersection);
+//    RayTriangleIntersection shadowIntersection = getClosestValidIntersection( intersection, light, obj, true);
+//
+//    if (shadowIntersection.distanceFromCamera <= lightDistance){
+//        return Colour(0.5 * colour.red, 0.5 * colour.green, 0.5 * colour.blue);
+//    } else return colour;
+//}
 
-    if (shadowIntersection.distanceFromCamera <= lightDistance){
-        return Colour(0.5 * colour.red, 0.5 * colour.green, 0.5 * colour.blue);
-    } else return colour;
-}
 
-
-Colour softShadow (Colour colour, glm::vec3 intersection, ModelTriangle triangle, const std::vector<ModelTriangle>& obj, float ambientThreshold) {
+float softShadow (glm::vec3 intersection, std::vector<ModelTriangle>& obj) {
     std::vector<float> lightingFactors;
     float lightLevel = 0.5/static_cast<int>(lightPositions.size());
     float lighting = 1;
@@ -207,7 +196,7 @@ Colour softShadow (Colour colour, glm::vec3 intersection, ModelTriangle triangle
         RayTriangleIntersection shadowIntersection = getClosestValidIntersection(intersection, light, obj, true);
 
         if (shadowIntersection.distanceFromCamera <= lightDistance) {
-            return Colour(0.5f * colour.red, 0.5f * colour.green, 0.5f * colour.blue);
+            return 0.5;
         }
     } else {
         for (const auto& lightPos : lightPositions) {
@@ -218,15 +207,49 @@ Colour softShadow (Colour colour, glm::vec3 intersection, ModelTriangle triangle
 //                std::cout << "found shadow factor" << std::endl;
                 lighting -= lightLevel;
 //                std::cout << lighting << std::endl;
-
             }
         }
 //        std::cout << lighting << std::endl;
-        if(lighting < 0.2) {lighting = 0.2;} else if(lighting >1) {lighting = 1.0;}
-        return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
     }
-    return colour;
+    return lighting;
 }
+
+float ambientLighting(std::vector<float> lightingFactors, float ambientThreshold) {
+    if (lightingFactors.empty()) {return 1;}
+    float s = 0.0f;
+    for (const float& factor : lightingFactors) {s += factor;}
+    float lighting = s / lightingFactors.size();
+    if (lighting < ambientThreshold) {lighting = ambientThreshold;} else if(lighting > 1) {lighting = 1;}
+//    std::cout << lighting << std::endl;
+    return lighting;
+}
+
+
+Colour light(Colour colour, glm::vec3 intersection, glm::vec3 normal, glm::vec3 cameraRayDirection, std::vector<ModelTriangle>& obj) {
+    std::vector<float> lightingFactors;
+    float lighting;
+    if(proximityLight){
+        lighting = proximityLighting(intersection);
+        lightingFactors.push_back(lighting);
+    }
+    if(angleOfIncidenceLight){
+        lighting = angleOfIncidenceLighting(intersection, normal);
+        lightingFactors.push_back(lighting);
+    }
+    if(specularLight){
+        lighting = specularLighting(intersection, normal, cameraRayDirection);
+        lightingFactors.push_back(lighting);
+    }
+    if(shadowLight){
+        lighting = softShadow(intersection, obj);
+        lightingFactors.push_back(lighting);
+    }
+    if(lightingFactors.empty()) { return colour; } else {lighting = ambientLighting(lightingFactors, 0.01);}
+    return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
+}
+
+
+
 
 
 void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f, std::vector<ModelTriangle> obj){
@@ -242,31 +265,21 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
 
-                if (triangle.colour.name == "Magenta") {
+                if (reflect && triangle.colour.name == "Magenta") {
                     glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
                     glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
                     RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
                     if (reflectedInt.distanceFromCamera < std::numeric_limits<float>::infinity()) {
-                        ModelTriangle reflectedT = intersection.intersectedTriangle;
-                        Colour pixelColour = intersection.intersectedTriangle.colour;
-//                        pixelColour = hardShadow(pixelColour, reflectedInt.intersectionPoint, reflectedT, obj);
-                        pixelColour = softShadow(pixelColour, reflectedInt.intersectionPoint, intersection.intersectedTriangle, obj, 0.2);
-//                        pixelColour = proximityLighting(pixelColour, intersection.intersectionPoint);
-//                        pixelColour = angleOfIncidenceLighting(pixelColour, intersection.intersectionPoint, intersection.intersectedTriangle);
-//                        pixelColour = specularLighting(pixelColour, intersection.intersectionPoint, intersection.intersectedTriangle, rayDirection, 64);
-                        window.setPixelColour(x, y, pixelColour);
+                        ModelTriangle reflectedT = reflectedInt.intersectedTriangle;
+                        Colour colour = reflectedInt.intersectedTriangle.colour;
+                        colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle.normal, reflected, obj);
+                        window.setPixelColour(x, y, colour);
                     }
-
                 }
                 else {
-                    Colour pixelColour = intersection.intersectedTriangle.colour;
-//                    pixelColour = hardShadow(pixelColour, intersection.intersectionPoint, triangle, obj);
-                    pixelColour = softShadow(pixelColour, intersection.intersectionPoint, intersection.intersectedTriangle, obj, 0.2);
-//                    pixelColour = proximityLighting(pixelColour, intersection.intersectionPoint);
-//                    pixelColour = angleOfIncidenceLighting(pixelColour, intersection.intersectionPoint, intersection.intersectedTriangle);
-//                    pixelColour = specularLighting(pixelColour, intersection.intersectionPoint, intersection.intersectedTriangle, rayDirection, 64);
-
-                    window.setPixelColour(x, y, pixelColour);
+                    Colour colour = intersection.intersectedTriangle.colour;
+                    colour = light(colour, intersection.intersectionPoint, intersection.intersectedTriangle.normal, rayDirection, obj);
+                    window.setPixelColour(x, y, colour);
                 }
             }
         }
@@ -292,6 +305,11 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         else if (event.key.keysym.sym == SDLK_d) rotate(c,'d');
         else if (event.key.keysym.sym == SDLK_w) rotate(c,'w');
         else if (event.key.keysym.sym == SDLK_s) rotate(c,'s');
+
+        else if (event.key.keysym.sym == SDLK_1) proximityLight = !proximityLight;
+        else if (event.key.keysym.sym == SDLK_1) angleOfIncidenceLight = !angleOfIncidenceLight;
+        else if (event.key.keysym.sym == SDLK_1) specularLight = !specularLight;
+        else if (event.key.keysym.sym == SDLK_1) shadowLight = !shadowLight;
 
         else if (event.key.keysym.sym == SDLK_q) return true;
         else if (event.key.keysym.sym == SDLK_SPACE) *p = !*p;
@@ -322,6 +340,7 @@ int main(int argc, char *argv[]) {
     SDL_Event event;
     bool terminate = false;
     bool* pause = new bool(true);
+    std::cout << "1, 2, 3, 4 to control light!" << std::endl;
 
     // texture
 //    std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/textured-cornell-box.mtl");
