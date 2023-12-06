@@ -16,17 +16,22 @@
 #include <unordered_map>
 #include <thread>
 
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH 320
+#define HEIGHT 240
 
-glm::vec3 lightSource = glm::vec3(0.0, 0.5, 0.25);
+glm::vec3 lightSource = glm::vec3(0.0, 0.4, 0.25);
 std::vector<glm::vec3> lightPositions;
 
 bool proximityLight = true;
 bool angleOfIncidenceLight = true;
 bool specularLight = true;
 bool shadowLight = true;
-bool reflect = true;
+
+bool mirror = true;
+bool metal = true;
+
+bool rayTrace = false;
+
 
 void lightInitialisation(std::vector<ModelTriangle> obj) {
     lightPositions.clear();
@@ -48,7 +53,7 @@ void lightInitialisation(std::vector<ModelTriangle> obj) {
     }
     lightPositionsMean = lightPositionsMean/(2*verticesNumber);
     lightPositions.push_back(lightPositionsMean);
-    lightSource = lightPositionsMean;
+//    lightSource = lightPositionsMean;
     std::cout << lightSource.x << "," << lightSource.y << "," << lightSource.z << std::endl;
 //    std::cout << lightSource << std::endl;
 }
@@ -139,7 +144,7 @@ float specularLighting(glm::vec3 intersection, glm::vec3 normal, glm::vec3 camer
 
     float specularFactor = glm::dot(reflectionDirection, -cameraRayDirection);
     specularFactor = glm::max(specularFactor, 0.0f);
-    float lighting = pow(specularFactor, 64); //specular exponent
+    float lighting = pow(specularFactor, 256); //specular exponent
     return lighting;
 }
 
@@ -245,7 +250,7 @@ Colour light(Colour colour, glm::vec3 intersection, glm::vec3 normal, glm::vec3 
         lighting = softShadow(intersection, obj);
         lightingFactors.push_back(lighting);
     }
-    if(lightingFactors.empty()) { return colour; } else {lighting = ambientLighting(lightingFactors, 0.01);}
+    if(lightingFactors.empty()) { return colour; } else {lighting = ambientLighting(lightingFactors, 0.2);}
     return Colour(lighting * colour.red, lighting * colour.green, lighting * colour.blue);
 }
 
@@ -266,7 +271,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
             if (intersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
                 ModelTriangle triangle = intersection.intersectedTriangle;
 
-                if (reflect && triangle.colour.name == "Cyan") {
+                if (metal && triangle.colour.name == "Cyan") {
                     glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
                     glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
                     RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
@@ -278,7 +283,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                         colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle.normal, reflected, obj);
                         window.setPixelColour(x, y, colour);
                     }
-                } else if (reflect && triangle.colour.name == "Blue") {
+                } else if (mirror && triangle.colour.name == "Blue") {
                     glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
                     glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
                     RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
@@ -307,8 +312,10 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
 
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
     if (event.type == SDL_KEYDOWN) {
+        if (event.key.keysym.sym == SDLK_0) {rayTrace = !rayTrace;}
+
         // translate
-        if (event.key.keysym.sym == SDLK_LEFT) {(*c).x =  (*c).x - translate;}
+        else if (event.key.keysym.sym == SDLK_LEFT) {(*c).x =  (*c).x - translate;}
         else if (event.key.keysym.sym == SDLK_RIGHT) {(*c).x =  (*c).x + translate;}
         else if (event.key.keysym.sym == SDLK_UP) {(*c).y =  (*c).y + translate;}
         else if (event.key.keysym.sym == SDLK_DOWN) {(*c).y =  (*c).y - translate;}
@@ -322,9 +329,11 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         else if (event.key.keysym.sym == SDLK_s) rotate(c,'s');
 
         else if (event.key.keysym.sym == SDLK_1) proximityLight = !proximityLight;
-        else if (event.key.keysym.sym == SDLK_1) angleOfIncidenceLight = !angleOfIncidenceLight;
-        else if (event.key.keysym.sym == SDLK_1) specularLight = !specularLight;
-        else if (event.key.keysym.sym == SDLK_1) shadowLight = !shadowLight;
+        else if (event.key.keysym.sym == SDLK_2) angleOfIncidenceLight = !angleOfIncidenceLight;
+        else if (event.key.keysym.sym == SDLK_3) specularLight = !specularLight;
+        else if (event.key.keysym.sym == SDLK_4) shadowLight = !shadowLight;
+        else if (event.key.keysym.sym == SDLK_5) mirror = !mirror;
+        else if (event.key.keysym.sym == SDLK_6) metal = !metal;
 
         else if (event.key.keysym.sym == SDLK_q) return true;
         else if (event.key.keysym.sym == SDLK_SPACE) *p = !*p;
@@ -394,13 +403,15 @@ int main(int argc, char *argv[]) {
                 depthBuffer[i][j] = 0;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         if (!*pause){
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-//        objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer, "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
-        drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj);
+        if (rayTrace) { drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj); }
+        else {
+            objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer,
+                        "/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/texture.ppm");
+        }
         window.renderFrame();
     }
 
