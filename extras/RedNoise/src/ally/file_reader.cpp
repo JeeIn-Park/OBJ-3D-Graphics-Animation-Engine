@@ -39,7 +39,6 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
     std::ifstream mtlFile(filename);
     std::string colourName;
 
-    // handle error : when file is not opened
     if (!mtlFile.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
         return colourMap;
@@ -60,8 +59,6 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
         else if (token == "Kd") {
             std::array<float, 3> rgb;
             iss >> rgb[0] >> rgb[1] >> rgb[2];
-//            std::cout << "RGB: " << rgb[0] << " " << rgb[1] << " " << rgb[2] << std::endl;
-
             if (rgb[0] >= 0 && rgb[1] >= 0 && rgb[2] >= 0) {
                 colourMap[colourName] = Colour(colourName ,255 * rgb[0], 255 * rgb[1], 255 * rgb[2]);
             }
@@ -80,7 +77,6 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
         }
 
     }
-
     mtlFile.close();
     return colourMap;
 }
@@ -93,15 +89,12 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
     int vertexSetSize = 0;
     std::vector<glm::vec3> textures;
     bool assignTexture = false;
-//    bool assignLight = false;
     Colour currentColour;
 
     std::string line;
     std::ifstream objFile(filename);
     float xMax=0, yMax=0, zMax=0, xMin=0, yMin=0, zMin=0;
 
-
-    // handle error : when file is not opened
     if (!objFile.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
         return triangles;
@@ -114,12 +107,10 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
         if (token == "o"){
             assignTexture = false;
-//            assignLight = false;
             textures.clear();
             std::string objectName;
             iss >> objectName;
             if (objectName == "light") {
-//                assignLight = true;
             }
         }
 
@@ -141,7 +132,6 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             vertexSetSize = vertexSetSize + 1;
         }
 
-
             // vt - texture
         else if (token == "vt") {
             glm::vec3 texture;
@@ -152,14 +142,12 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             assignTexture = true;
         }
 
-
             // f - face
         else if (token == "f") {
             vertexSetSize = 0;
             std::string vertex;
             std::array<int, 3> vertexIndices;
 
-            // extract vertex indices and put it in vertexIndices
             for (int i = 0; i < 3; ++i) {
                 iss >> vertex;
                 size_t pos = vertex.find('/');
