@@ -82,6 +82,7 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
 
 std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
     std::vector<ModelTriangle> triangles;
+    std::vector<std::array<int, 3>> triangleIndices;
     std::vector<glm::vec3> vertices;
     int vertexSetSize = 0;
     std::vector<glm::vec3> textures;
@@ -91,6 +92,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
     std::string line;
     std::ifstream objFile(filename);
+    float xMean=0, yMean=0, zMean=0;
 
     // handle error : when file is not opened
     if (!objFile.is_open()) {
@@ -125,6 +127,9 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         else if (token == "v") {
             glm::vec3 vertex;
             iss >> vertex.x >> vertex.y >> vertex.z;
+            if (!assignLight){
+                xMean += vertex.x; yMean += vertex.y; zMean += vertex.z;
+            }
             vertices.push_back(glm::vec3(s * vertex.x, s * vertex.y, s * vertex.z));
             vertexSetSize = vertexSetSize + 1;
         }
@@ -170,32 +175,38 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                 }
                 vertexIndices[i] = std::stoi(vertex) - 1;
             }
-
-            // when all vertex indices are valid
-            if (vertexIndices[0] >= 0 && vertexIndices[1] >= 0 && vertexIndices[2] >= 0) {
-                ModelTriangle triangle;
-                for (int i = 0; i < 3; ++i) {
-                    triangle.vertices[i] = vertices[vertexIndices[i]];
-                    if (assignTexture) {
-                        for (size_t j = 0; j < textures.size(); ++j) {
-                            if (textures[j].z == vertexIndices[i]) {
-                                triangle.texturePoints[i] = TexturePoint(textures[j].y, textures[j].x);
-                            }
-                        }
-                    } else {
-                        triangle.texturePoints[i] = TexturePoint(-1, -1);
-                    }
-                }
-                glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
-                glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
-                triangle.normal = glm::normalize(glm::cross(e0,e1));
-                triangle.colour = currentColour;
-                triangles.push_back(triangle);
-
-            }
+            triangleIndices.push_back(vertexIndices);
         }
 
     }
+    xMean = xMean/vertices.size(); yMean = yMean/vertices.size(); zMean = zMean/vertices.size();
+    for (auto& vertex : vertices){
+        vertex.x -= xMean; vertex.y -= yMean; vertex.z -= zMean;
+    }
+    ModelTriangle triangle;
+    for (auto& triangleIndex : triangleIndices){
+        for (int i = 0; i < 3; ++i) {
+            triangle.vertices[i] = vertices[triangleIndex[i]];
+            if (assignTexture) {
+                for (size_t j = 0; j < textures.size(); ++j) {
+                    if (textures[j].z == triangleIndex[i]) {
+                        triangle.texturePoints[i] = TexturePoint(textures[j].y, textures[j].x);
+                    }
+                }
+            } else {
+                triangle.texturePoints[i] = TexturePoint(-1, -1);
+            }
+        }
+        glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
+        glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
+        triangle.normal = glm::normalize(glm::cross(e0,e1));
+        triangle.colour = currentColour;
+        triangles.push_back(triangle);
+    }
+
+//    std::cout << vertices.size() << std::endl;
+    std::cout << triangles.size() << std::endl;
+
     objFile.close();
     return triangles;
 }
