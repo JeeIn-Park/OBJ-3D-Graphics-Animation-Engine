@@ -1,6 +1,4 @@
-#include "Utils.h"
 #include "glm/glm.hpp"
-
 #include "camera_move.h"
 
 void rotate(glm::vec3* c, char t){

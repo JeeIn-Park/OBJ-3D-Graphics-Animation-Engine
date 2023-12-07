@@ -9,11 +9,7 @@
 #include <ModelTriangle.h>
 #include <fstream>
 
-// TODO : check if I can include this library
 #include <sstream>
-
-
-// TODO : check if it's allowed to use this library
 #include <unordered_map>
 #include <thread>
 

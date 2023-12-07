@@ -8,11 +8,7 @@
 #include <ModelTriangle.h>
 #include <fstream>
 
-// TODO : check if I can include this library
 #include <sstream>
-
-
-// TODO : check if it's allowed to use this library
 #include <unordered_map>
 
 #define WIDTH 320
@@ -28,11 +24,13 @@ struct TriangleInfo {
     explicit TriangleInfo(const std::array<int, 3> &triangleIndices);
 };
 
+
 TriangleInfo::TriangleInfo() = default;
 TriangleInfo::TriangleInfo(std::array<int, 3> indices, Colour col) :
         triangleIndices(indices), colour(col) {}
 
 TriangleInfo::TriangleInfo(const std::array<int, 3> &triangleIndices) : triangleIndices(triangleIndices) {}
+
 
 
 std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
@@ -71,19 +69,12 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
         }
 
         else if (token == "map_Kd") {
-            // TODO : store what texture is used for this colour
-            // TODO : study this code bit
-            // Check if the key exists in the map
             auto it = colourMap.find(colourName);
             if (it != colourMap.end()) {
-                // Get the value corresponding to the key
                 Colour old_value = it->second;
-                // Define new key and value
                 std::string new_key;
                 iss >> new_key;
-                // Remove the old key-value pair
                 colourMap.erase(it);
-                // Update the map with the new key-value pair
                 colourMap[new_key] = Colour(255, 255, 255);
             }
         }
@@ -164,20 +155,6 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
             // f - face
         else if (token == "f") {
-//            if (assignLight) {
-//                float x, y, z;
-//                size_t verticesNumber = vertices.size();
-//                for (size_t i = 0; i < verticesNumber; ++i) {
-//                    x = x + vertices[i].x;
-//                    y = y + vertices[i].y;
-//                    z = z + vertices[i].z;
-//                }
-//                x = x / (2 * verticesNumber);
-//                y = y / (2 * verticesNumber);
-//                z = z / (2 * verticesNumber);
-//              lightPosition = glm::vec3(x, y, z);
-//            }
-
             vertexSetSize = 0;
             std::string vertex;
             std::array<int, 3> vertexIndices;
@@ -186,7 +163,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
             for (int i = 0; i < 3; ++i) {
                 iss >> vertex;
                 size_t pos = vertex.find('/');
-                if (pos != std::string::npos) { // TODO : npos study
+                if (pos != std::string::npos) {
                     vertex = vertex.substr(0, pos);
                 }
                 vertexIndices[i] = std::stoi(vertex) - 1;
@@ -220,7 +197,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         triangles.push_back(triangle);
     }
 
-//    std::cout << vertices.size() << std::endl;
+    std::cout << vertices.size() << std::endl;
     std::cout << triangles.size() << std::endl;
 
     objFile.close();

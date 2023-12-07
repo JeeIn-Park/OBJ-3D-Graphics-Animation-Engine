@@ -12,7 +12,6 @@
 #include "ally/camera_move.h"
 #include "ally/file_reader.h"
 
-// TODO : check if it's allowed to use this library
 #include <unordered_map>
 #include <thread>
 
@@ -21,6 +20,8 @@
 
 glm::vec3 lightSource = glm::vec3(0.0, 0.4, 0.25);
 std::vector<glm::vec3> lightPositions;
+
+bool box = true;
 
 bool proximityLight = true;
 bool angleOfIncidenceLight = true;
@@ -95,6 +96,28 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
 
     //use calculated last value as to if the gap cannot be represented by float
     return result;
+}
+
+
+glm::vec3 barycentric(const ModelTriangle& triangle, int x, int y) {
+    glm::vec3 v0 = triangle.vertices[0];
+    glm::vec3 v1 = triangle.vertices[1];
+    glm::vec3 v2 = triangle.vertices[2];
+
+    glm::vec3 v0v1 = v1 - v0;
+    glm::vec3 v0v2 = v2 - v0;
+    glm::vec3 v0p = glm::vec3(x, y, 0) - v0;
+
+    float dot00 = glm::dot(v0v2, v0v2);
+    float dot01 = glm::dot(v0v2, v0v1);
+    float dot02 = glm::dot(v0v2, v0p);
+    float dot11 = glm::dot(v0v1, v0v1);
+    float dot12 = glm::dot(v0v1, v0p);
+
+    float d = 1/(dot00 * dot11 - dot01 * dot01);
+    float u = (dot11 * dot02 - dot01 * dot12) * d;
+    float v = (dot00 * dot12 - dot01 * dot02) * d;
+    return glm::vec3(u, v, 1 - (u + v));
 }
 
 
@@ -258,6 +281,7 @@ Colour light(Colour colour, glm::vec3 intersection, glm::vec3 normal, glm::vec3 
 
 
 
+
 void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f, std::vector<ModelTriangle> obj){
     window.clearPixels();
     for (int x = 0; x < WIDTH; x++) {
@@ -313,6 +337,7 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
     Colour colour(rand() % 256, rand() % 256, rand() % 256);
     if (event.type == SDL_KEYDOWN) {
         if (event.key.keysym.sym == SDLK_0) {rayTrace = !rayTrace;}
+        else if (event.key.keysym.sym == SDLK_9) {box = !box;}
 
         // translate
         else if (event.key.keysym.sym == SDLK_LEFT) {(*c).x =  (*c).x - translate;}
@@ -372,16 +397,14 @@ int main(int argc, char *argv[]) {
 
     // no texture
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
-    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
-//    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/sphere.obj", mtl, 1);
+    std::vector<ModelTriangle> boxes = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
+    std::vector<ModelTriangle> sphere = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/sphere.obj", mtl, 1);
 
 //    lightInitialisation(obj);
 
     glm::vec3* cameraToVertex = new glm::vec3 (0.0, 0.0, 4.0);
     float* f = new float(2.0);
 
-    // TODO : study heap/memory allocation
-    // TODO : study pointer
     float** depthBuffer = new float*[WIDTH];
     for (int i = 0; i < WIDTH; ++i) {
         depthBuffer[i] = new float [HEIGHT];
@@ -398,6 +421,7 @@ int main(int argc, char *argv[]) {
             0, 0, 1
     );
 
+    std::vector<ModelTriangle> obj;
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer, pause);
         for (int i = 0; i < WIDTH; ++i) {
@@ -409,6 +433,7 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
+        if (box) {obj = boxes;} else {obj = sphere;}
         if (rayTrace) { drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj); }
         else {
             objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer,
@@ -417,8 +442,6 @@ int main(int argc, char *argv[]) {
         window.renderFrame();
     }
 
-
-    // TODO : study memory de-allocation
     for (int i = 0; i < WIDTH; ++i) {
         delete[] depthBuffer[i];
     }

@@ -11,7 +11,7 @@
 #include "TexturePoint.h"
 #include "ModelTriangle.h"
 #include "RayTriangleIntersection.h"
-// TODO : check if I can include this library
+
 #include <sstream>
 
 int positiveOrNegative(float value);
