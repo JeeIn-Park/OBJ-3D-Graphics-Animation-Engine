@@ -14,10 +14,25 @@
 
 // TODO : check if it's allowed to use this library
 #include <unordered_map>
-#include <thread>
 
 #define WIDTH 320
 #define HEIGHT 240
+
+struct TriangleInfo {
+    std::array<int, 3> triangleIndices;
+    Colour colour{};
+
+    TriangleInfo();
+    TriangleInfo(std::array<int, 3> indices, Colour col);
+
+    explicit TriangleInfo(const std::array<int, 3> &triangleIndices);
+};
+
+TriangleInfo::TriangleInfo() = default;
+TriangleInfo::TriangleInfo(std::array<int, 3> indices, Colour col) :
+        triangleIndices(indices), colour(col) {}
+
+TriangleInfo::TriangleInfo(const std::array<int, 3> &triangleIndices) : triangleIndices(triangleIndices) {}
 
 
 std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
@@ -82,7 +97,7 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
 
 std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
     std::vector<ModelTriangle> triangles;
-    std::vector<std::array<int, 3>> triangleIndices;
+    std::vector<TriangleInfo> triangleInfos;
     std::vector<glm::vec3> vertices;
     int vertexSetSize = 0;
     std::vector<glm::vec3> textures;
@@ -176,7 +191,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                 }
                 vertexIndices[i] = std::stoi(vertex) - 1;
             }
-            triangleIndices.push_back(vertexIndices);
+            triangleInfos.push_back(TriangleInfo(vertexIndices, currentColour));
         }
 
     }
@@ -185,12 +200,12 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         vertex.x -= xMid; vertex.y -= yMid; vertex.z -= zMid;
     }
     ModelTriangle triangle;
-    for (auto& triangleIndex : triangleIndices){
+    for (auto& triangleInfo : triangleInfos){
         for (int i = 0; i < 3; ++i) {
-            triangle.vertices[i] = vertices[triangleIndex[i]];
+            triangle.vertices[i] = vertices[triangleInfo.triangleIndices[i]];
             if (assignTexture) {
                 for (size_t j = 0; j < textures.size(); ++j) {
-                    if (textures[j].z == triangleIndex[i]) {
+                    if (textures[j].z == triangleInfo.triangleIndices[i]) {
                         triangle.texturePoints[i] = TexturePoint(textures[j].y, textures[j].x);
                     }
                 }
@@ -201,7 +216,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
         glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
         triangle.normal = glm::normalize(glm::cross(e0,e1));
-        triangle.colour = currentColour;
+        triangle.colour = triangleInfo.colour;
         triangles.push_back(triangle);
     }
 
