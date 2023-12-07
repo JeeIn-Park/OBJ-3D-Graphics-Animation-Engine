@@ -87,12 +87,13 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
     int vertexSetSize = 0;
     std::vector<glm::vec3> textures;
     bool assignTexture = false;
-    bool assignLight = false;
+//    bool assignLight = false;
     Colour currentColour;
 
     std::string line;
     std::ifstream objFile(filename);
-    float xMean=0, yMean=0, zMean=0;
+    float xMax=0, yMax=0, zMax=0, xMin=0, yMin=0, zMin=0;
+
 
     // handle error : when file is not opened
     if (!objFile.is_open()) {
@@ -107,12 +108,12 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
         if (token == "o"){
             assignTexture = false;
-            assignLight = false;
+//            assignLight = false;
             textures.clear();
             std::string objectName;
             iss >> objectName;
             if (objectName == "light") {
-                assignLight = true;
+//                assignLight = true;
             }
         }
 
@@ -127,9 +128,9 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         else if (token == "v") {
             glm::vec3 vertex;
             iss >> vertex.x >> vertex.y >> vertex.z;
-            if (!assignLight){
-                xMean += vertex.x; yMean += vertex.y; zMean += vertex.z;
-            }
+            xMax = std::max(xMax, vertex.x); yMax = std::max(yMax, vertex.y); zMax = std::max(zMax, vertex.z);
+            xMin = std::min(xMin, vertex.x); yMin = std::min(yMin, vertex.y); zMin = std::min(zMin, vertex.z);
+
             vertices.push_back(glm::vec3(s * vertex.x, s * vertex.y, s * vertex.z));
             vertexSetSize = vertexSetSize + 1;
         }
@@ -179,9 +180,9 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         }
 
     }
-    xMean = xMean/vertices.size(); yMean = yMean/vertices.size(); zMean = zMean/vertices.size();
+    float xMid = (xMax + xMin)/2, yMid = (yMax + yMin)/2, zMid = (zMax + zMin)/2;
     for (auto& vertex : vertices){
-        vertex.x -= xMean; vertex.y -= yMean; vertex.z -= zMean;
+        vertex.x -= xMid; vertex.y -= yMid; vertex.z -= zMid;
     }
     ModelTriangle triangle;
     for (auto& triangleIndex : triangleIndices){
