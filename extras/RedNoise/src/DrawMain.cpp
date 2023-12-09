@@ -20,8 +20,10 @@
 
 glm::vec3 lightSource = glm::vec3(0.0, 0.4, 0.25);
 std::vector<glm::vec3> lightPositions;
+std::vector<TriangleInfo> triangleIndices;
+std::vector<glm::vec3> vertexNorms;
 
-bool box = true;
+bool box = false;
 
 bool proximityLight = true;
 bool angleOfIncidenceLight = true;
@@ -120,6 +122,26 @@ glm::vec3 barycentric(const ModelTriangle& triangle, int x, int y) {
     return glm::vec3(u, v, 1 - (u + v));
 }
 
+
+
+std::vector<glm::vec3> computeVertexNormals(const std::vector<ModelTriangle>& obj) {
+    std::vector<glm::vec3> vertexNormals(obj.size() * 3, glm::vec3(0.0f));
+
+    for (int i = 0; i < static_cast<int>(obj.size()); ++i) {
+        glm::vec3 normal = computeTriangleNormal(obj[i]);
+
+        for (int j = 0; j < 3; ++j) {
+            int vertexIndex = i * 3 + j;
+            vertexNormals[vertexIndex] += normal;
+        }
+    }
+
+    for (int i = 0; i < vertexNormals.size(); ++i) {
+        vertexNormals[i] = glm::normalize(vertexNormals[i]); // Normalize the computed normals
+    }
+
+    return vertexNormals;
+}
 
 
 CanvasTriangle randomTriangle() {
@@ -397,8 +419,8 @@ int main(int argc, char *argv[]) {
 
     // no texture
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
-    std::vector<ModelTriangle> boxes = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
-    std::vector<ModelTriangle> sphere = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/sphere.obj", mtl, 1);
+    std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> boxes = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
+    std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> sphere = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/sphere.obj", mtl, 1);
 
 //    lightInitialisation(obj);
 
@@ -421,7 +443,7 @@ int main(int argc, char *argv[]) {
             0, 0, 1
     );
 
-    std::vector<ModelTriangle> obj;
+    std::vector<ModelTriangle> obj = std::get<0>(sphere);
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer, pause);
         for (int i = 0; i < WIDTH; ++i) {
@@ -433,7 +455,7 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-        if (box) {obj = boxes;} else {obj = sphere;}
+        if (box) {obj = std::get<0>(boxes);} else {obj = std::get<0>(sphere);}
         if (rayTrace) { drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj); }
         else {
             objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer,

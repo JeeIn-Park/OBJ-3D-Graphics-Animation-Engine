@@ -13,10 +13,16 @@
 #include <unordered_map>
 #include <thread>
 
-#define WIDTH 320
-#define HEIGHT 240
+struct TriangleInfo {
+    std::array<int, 3> triangleIndices;
+    Colour colour;
 
+    TriangleInfo();
+    TriangleInfo(std::array<int, 3> indices, Colour colour);
+};
 
-std::unordered_map<std::string, Colour> readMTL (const std::string &filename);
-std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s);
-
+bool shareCommonVertex(const ModelTriangle& tri1, const ModelTriangle& tri2);
+std::vector<int> findAdjacentFacets(const std::vector<ModelTriangle>& obj, int facetIndex);
+glm::vec3 computeTriangleNormal(const ModelTriangle& triangle);
+std::unordered_map<std::string, Colour> readMTL(const std::string &filename);
+std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s);

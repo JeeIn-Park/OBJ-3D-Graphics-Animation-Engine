@@ -14,22 +14,46 @@
 #define WIDTH 320
 #define HEIGHT 240
 
-struct TriangleInfo {
-    std::array<int, 3> triangleIndices;
-    Colour colour{};
-
-    TriangleInfo();
-    TriangleInfo(std::array<int, 3> indices, Colour col);
-
-    explicit TriangleInfo(const std::array<int, 3> &triangleIndices);
-};
-
-
 TriangleInfo::TriangleInfo() = default;
-TriangleInfo::TriangleInfo(std::array<int, 3> indices, Colour col) :
-        triangleIndices(indices), colour(col) {}
+TriangleInfo::TriangleInfo(std::array<int, 3> i,  Colour c) :
+        triangleIndices(i), colour(c) {}
 
-TriangleInfo::TriangleInfo(const std::array<int, 3> &triangleIndices) : triangleIndices(triangleIndices) {}
+
+bool shareCommonVertex(const ModelTriangle& tri1, const ModelTriangle& tri2) {
+    int commonVertices = 0;
+    for (const auto& vertex1 : tri1.vertices) {
+        for (const auto& vertex2 : tri2.vertices) {
+            if (glm::all(glm::equal(vertex1, vertex2))) {
+                ++commonVertices;
+            }
+        }
+    }
+    return commonVertices >= 2;
+}
+
+
+std::vector<int> findAdjacentFacets(const std::vector<ModelTriangle>& obj, int facetIndex) {
+    std::vector<int> adjacentFacets;
+
+    const ModelTriangle& targetFacet = obj[facetIndex];
+
+    for (int i = 0; i < obj.size(); ++i) {
+        if (i != facetIndex) {
+            if (shareCommonVertex(targetFacet, obj[i])) {
+                adjacentFacets.push_back(i);
+            }
+        }
+    }
+
+    return adjacentFacets;
+}
+
+
+glm::vec3 computeTriangleNormal(const ModelTriangle& triangle) {
+    glm::vec3 edge1 = triangle.vertices[1] - triangle.vertices[0];
+    glm::vec3 edge2 = triangle.vertices[2] - triangle.vertices[0];
+    return glm::normalize(glm::cross(edge1, edge2));
+}
 
 
 
@@ -82,7 +106,9 @@ std::unordered_map<std::string, Colour> readMTL (const std::string &filename) {
 }
 
 
-std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
+std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>>
+        readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s){
+
     std::vector<ModelTriangle> triangles;
     std::vector<TriangleInfo> triangleInfos;
     std::vector<glm::vec3> vertices;
@@ -97,7 +123,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
 
     if (!objFile.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
-        return triangles;
+        return  std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>>();
     }
 
     while (getline(objFile, line)){
@@ -165,7 +191,7 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
         vertex.x -= xMid; vertex.y -= yMid; vertex.z -= zMid;
     }
     ModelTriangle triangle;
-    for (auto& triangleInfo : triangleInfos){
+    for (auto& triangleInfo : triangleInfos) {
         for (int i = 0; i < 3; ++i) {
             triangle.vertices[i] = vertices[triangleInfo.triangleIndices[i]];
             if (assignTexture) {
@@ -178,17 +204,34 @@ std::vector<ModelTriangle> readOBJ(const std::string &filename, std::unordered_m
                 triangle.texturePoints[i] = TexturePoint(-1, -1);
             }
         }
-        glm::vec3 e0 = triangle.vertices[1] - triangle.vertices[0];
-        glm::vec3 e1 = triangle.vertices[2] - triangle.vertices[0];
-        triangle.normal = glm::normalize(glm::cross(e0,e1));
         triangle.colour = triangleInfo.colour;
+        triangle.normal = computeTriangleNormal(triangle);
         triangles.push_back(triangle);
     }
-
     std::cout << vertices.size() << std::endl;
     std::cout << triangles.size() << std::endl;
+    int vertexSize = static_cast<int>(vertices.size());
+    std::vector<std::vector<glm::vec3>> tempVertexNormal(vertexSize);
+    std::vector<glm::vec3> vertexNormal(vertexSize);
+
+    for (size_t i = 0; i < triangles.size(); ++i) {
+        glm::vec3 faceNormal = triangles[i].normal;
+        for (int k= 0; k < 3; ++ k) {
+            tempVertexNormal[triangleInfos[i].triangleIndices[k]].push_back(faceNormal);
+        }
+    }
+
+    for (size_t i = 0; i < tempVertexNormal.size(); ++i) {
+        glm::vec3 normalSum;
+        size_t numberOfNormals = tempVertexNormal[i].size();
+        for (size_t k = 0; k < numberOfNormals; ++k){
+            normalSum += tempVertexNormal[i][k];
+        }
+        vertexNormal[i] = normalSum/(static_cast<float>(numberOfNormals));
+//        std::cout << vertexNormal[i].x << "," << vertexNormal[i].y << "," << vertexNormal[i].z << std::endl;
+    }
 
     objFile.close();
-    return triangles;
+    return  std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>>(triangles, triangleInfos, vertexNormal);
 }
 
