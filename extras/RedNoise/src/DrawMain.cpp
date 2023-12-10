@@ -101,47 +101,54 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
 }
 
 
-glm::vec3 barycentric(const ModelTriangle& triangle, int x, int y) {
-    glm::vec3 v0 = triangle.vertices[0];
-    glm::vec3 v1 = triangle.vertices[1];
-    glm::vec3 v2 = triangle.vertices[2];
+glm::vec3 findBarycentricCoordinates(glm::vec3 point, ModelTriangle triangle) {
+    glm::vec3 v0 = triangle.vertices[2] - triangle.vertices[0];
+    glm::vec3 v1 = triangle.vertices[1] - triangle.vertices[0];
+    glm::vec3 v2 = point - triangle.vertices[0];
 
-    glm::vec3 v0v1 = v1 - v0;
-    glm::vec3 v0v2 = v2 - v0;
-    glm::vec3 v0p = glm::vec3(x, y, 0) - v0;
+    float dot00 = glm::dot(v0, v0);
+    float dot01 = glm::dot(v0, v1);
+    float dot02 = glm::dot(v0, v2);
+    float dot11 = glm::dot(v1, v1);
+    float dot12 = glm::dot(v1, v2);
 
-    float dot00 = glm::dot(v0v2, v0v2);
-    float dot01 = glm::dot(v0v2, v0v1);
-    float dot02 = glm::dot(v0v2, v0p);
-    float dot11 = glm::dot(v0v1, v0v1);
-    float dot12 = glm::dot(v0v1, v0p);
+    float denominator = dot00 * dot11 - dot01 * dot01;
+    float u = (dot11 * dot02 - dot01 * dot12) / denominator;
+    float v = (dot00 * dot12 - dot01 * dot02) / denominator;
+    float w = 1.0f - u - v;
 
-    float d = 1/(dot00 * dot11 - dot01 * dot01);
-    float u = (dot11 * dot02 - dot01 * dot12) * d;
-    float v = (dot00 * dot12 - dot01 * dot02) * d;
-    return glm::vec3(u, v, 1 - (u + v));
+    return glm::vec3(u, v, w);
 }
 
 
+glm::vec3 interpolateVertexNormal(glm::vec3 normalV0, glm::vec3 normalV1, glm::vec3 normalV2, glm::vec3 barycentricCoords) {
+    int numberOfValues = 10;
+    std::vector<glm::vec3> interpolatedNormalsX0 = interpolateThreeElementValues(normalV0, normalV2, numberOfValues);
+    std::vector<glm::vec3> interpolatedNormalsY0 = interpolateThreeElementValues(normalV0, normalV2, numberOfValues);
+    std::vector<glm::vec3> interpolatedNormalsZ0 = interpolateThreeElementValues(normalV0, normalV2, numberOfValues);
 
-std::vector<glm::vec3> computeVertexNormals(const std::vector<ModelTriangle>& obj) {
-    std::vector<glm::vec3> vertexNormals(obj.size() * 3, glm::vec3(0.0f));
+    std::vector<glm::vec3> interpolatedNormalsX1 = interpolateThreeElementValues(normalV1, normalV2, numberOfValues);
+    std::vector<glm::vec3> interpolatedNormalsY1 = interpolateThreeElementValues(normalV1, normalV2, numberOfValues);
+    std::vector<glm::vec3> interpolatedNormalsZ1 = interpolateThreeElementValues(normalV1, normalV2, numberOfValues);
 
-    for (int i = 0; i < static_cast<int>(obj.size()); ++i) {
-        glm::vec3 normal = computeTriangleNormal(obj[i]);
+    glm::vec3 interpolatedNormal(0.0f);
+    for (int i = 0; i <= numberOfValues; ++i) {
+        interpolatedNormal.x += interpolatedNormalsX0[i].x * barycentricCoords.x +
+                                interpolatedNormalsY0[i].x * barycentricCoords.y +
+                                interpolatedNormalsZ0[i].x * barycentricCoords.z;
 
-        for (int j = 0; j < 3; ++j) {
-            int vertexIndex = i * 3 + j;
-            vertexNormals[vertexIndex] += normal;
-        }
+        interpolatedNormal.y += interpolatedNormalsX0[i].y * barycentricCoords.x +
+                                interpolatedNormalsY0[i].y * barycentricCoords.y +
+                                interpolatedNormalsZ0[i].y * barycentricCoords.z;
+
+        interpolatedNormal.z += interpolatedNormalsX0[i].z * barycentricCoords.x +
+                                interpolatedNormalsY0[i].z * barycentricCoords.y +
+                                interpolatedNormalsZ0[i].z * barycentricCoords.z;
     }
 
-    for (int i = 0; i < vertexNormals.size(); ++i) {
-        vertexNormals[i] = glm::normalize(vertexNormals[i]); // Normalize the computed normals
-    }
-
-    return vertexNormals;
+    return glm::normalize(interpolatedNormal);
 }
+
 
 
 CanvasTriangle randomTriangle() {
@@ -276,8 +283,10 @@ float ambientLighting(std::vector<float> lightingFactors, float ambientThreshold
 }
 
 
-Colour light(Colour colour, glm::vec3 intersection, glm::vec3 normal, glm::vec3 cameraRayDirection, std::vector<ModelTriangle>& obj) {
+Colour light(Colour colour, glm::vec3 intersection, ModelTriangle triangle, glm::vec3 cameraRayDirection, std::vector<ModelTriangle>& obj, size_t i) {
     std::vector<float> lightingFactors;
+    glm::vec3 b = findBarycentricCoordinates(intersection, triangle);
+    glm::vec3 normal = interpolateVertexNormal(vertexNorms[triangleIndices[i].triangleIndices[0]], vertexNorms[triangleIndices[i].triangleIndices[1]], vertexNorms[triangleIndices[i].triangleIndices[2]],b);
     float lighting;
     if(proximityLight){
         lighting = proximityLighting(intersection);
@@ -308,7 +317,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
     window.clearPixels();
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
-            glm::vec3 rayDirection = glm::vec3 (-WIDTH/2 + x, HEIGHT/2 - y, -f*HEIGHT/2);
+            glm::vec3 rayDirection = glm::vec3 (-WIDTH/2 + x, HEIGHT/2 - y, -f * HEIGHT/2);
 //            glm::vec3 rayDirection = o * glm::vec3 (2*x/HEIGHT - 2*WIDTH/HEIGHT, 1 - 2*y/HEIGHT, -f);
             rayDirection = glm::normalize(rayDirection - c);
             rayDirection = glm::normalize(glm::inverse(o) * rayDirection);
@@ -326,7 +335,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                         Colour OriginalColour = triangle.colour;
                         Colour ReflectedColour = reflectedInt.intersectedTriangle.colour;
                         Colour colour = Colour((OriginalColour.red + ReflectedColour.red)/2, (OriginalColour.green + ReflectedColour.green)/2, (OriginalColour.blue + ReflectedColour.blue)/2);
-                        colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle.normal, reflected, obj);
+                        colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle, reflected, obj, reflectedInt.triangleIndex);
                         window.setPixelColour(x, y, colour);
                     }
                 } else if (mirror && triangle.colour.name == "Blue") {
@@ -338,13 +347,13 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
 //                        Colour OriginalColour = triangle.colour;
                         Colour ReflectedColour = reflectedInt.intersectedTriangle.colour;
                         Colour colour = Colour((ReflectedColour.red)*0.8, (ReflectedColour.green)*0.8, (ReflectedColour.blue)*0.8);
-                        colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle.normal, reflected, obj);
+                        colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle, reflected, obj, reflectedInt.triangleIndex);
                         window.setPixelColour(x, y, colour);
                     }
                 }
                 else {
                     Colour colour = intersection.intersectedTriangle.colour;
-                    colour = light(colour, intersection.intersectionPoint, intersection.intersectedTriangle.normal, rayDirection, obj);
+                    colour = light(colour, intersection.intersectionPoint, intersection.intersectedTriangle, rayDirection, obj, intersection.triangleIndex);
                     window.setPixelColour(x, y, colour);
                 }
             }
@@ -422,7 +431,6 @@ int main(int argc, char *argv[]) {
     std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> boxes = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
     std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> sphere = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/sphere.obj", mtl, 1);
 
-//    lightInitialisation(obj);
 
     glm::vec3* cameraToVertex = new glm::vec3 (0.0, 0.0, 4.0);
     float* f = new float(2.0);
@@ -444,6 +452,10 @@ int main(int argc, char *argv[]) {
     );
 
     std::vector<ModelTriangle> obj = std::get<0>(sphere);
+    triangleIndices = std::get<1>(sphere);
+    vertexNorms = std::get<2>(sphere);
+
+    lightInitialisation(obj);
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer, pause);
         for (int i = 0; i < WIDTH; ++i) {
@@ -455,7 +467,13 @@ int main(int argc, char *argv[]) {
             orbit(cameraToVertex);
         }
         lookAt(cameraToVertex, cameraOrientation);
-        if (box) {obj = std::get<0>(boxes);} else {obj = std::get<0>(sphere);}
+        if (box) {
+            obj = std::get<0>(boxes);
+            triangleIndices = std::get<1>(boxes);
+            vertexNorms = std::get<2>(boxes);
+        } else {obj = std::get<0>(sphere);
+            triangleIndices = std::get<1>(sphere);
+            vertexNorms = std::get<2>(sphere);}
         if (rayTrace) { drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj); }
         else {
             objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer,
