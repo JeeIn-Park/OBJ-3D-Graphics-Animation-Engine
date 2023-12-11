@@ -101,53 +101,50 @@ std::vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 t
 }
 
 
-glm::vec3 findBarycentricCoordinates(glm::vec3 point, ModelTriangle triangle) {
-    glm::vec3 v0 = triangle.vertices[2] - triangle.vertices[0];
-    glm::vec3 v1 = triangle.vertices[1] - triangle.vertices[0];
-    glm::vec3 v2 = point - triangle.vertices[0];
+glm::vec3 barycentricCoordinates(glm::vec3 point, ModelTriangle triangle) {
+    glm::vec3 v1 = triangle.vertices[0];
+    glm::vec3 v2 = triangle.vertices[1];
+    glm::vec3 v3 = triangle.vertices[2];
+    glm::vec3 v0 = v2 - v1;
+    glm::vec3 v1v2 = v3 - v1;
+//    glm::vec3 v2v1 = v2 - v3;
+    glm::vec3 v2point = point - v1;
 
-    float dot00 = glm::dot(v0, v0);
-    float dot01 = glm::dot(v0, v1);
-    float dot02 = glm::dot(v0, v2);
-    float dot11 = glm::dot(v1, v1);
-    float dot12 = glm::dot(v1, v2);
+    float d00 = glm::dot(v0, v0);
+    float d01 = glm::dot(v0, v1v2);
+    float d11 = glm::dot(v1v2, v1v2);
+    float d20 = glm::dot(v2point, v0);
+    float d21 = glm::dot(v2point, v1v2);
 
-    float denominator = dot00 * dot11 - dot01 * dot01;
-    float u = (dot11 * dot02 - dot01 * dot12) / denominator;
-    float v = (dot00 * dot12 - dot01 * dot02) / denominator;
-    float w = 1.0f - u - v;
+    float denom = d00 * d11 - d01 * d01;
+
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.0f - v - w;
 
     return glm::vec3(u, v, w);
 }
 
 
-glm::vec3 interpolateVertexNormal(glm::vec3 normalV0, glm::vec3 normalV1, glm::vec3 normalV2, glm::vec3 barycentricCoords) {
-    int numberOfValues = 10;
-    std::vector<glm::vec3> interpolatedNormalsX0 = interpolateThreeElementValues(normalV0, normalV2, numberOfValues);
-    std::vector<glm::vec3> interpolatedNormalsY0 = interpolateThreeElementValues(normalV0, normalV2, numberOfValues);
-    std::vector<glm::vec3> interpolatedNormalsZ0 = interpolateThreeElementValues(normalV0, normalV2, numberOfValues);
 
-    std::vector<glm::vec3> interpolatedNormalsX1 = interpolateThreeElementValues(normalV1, normalV2, numberOfValues);
-    std::vector<glm::vec3> interpolatedNormalsY1 = interpolateThreeElementValues(normalV1, normalV2, numberOfValues);
-    std::vector<glm::vec3> interpolatedNormalsZ1 = interpolateThreeElementValues(normalV1, normalV2, numberOfValues);
+glm::vec3 calculatePointNormal(glm::vec3 normalV0, glm::vec3 normalV1, glm::vec3 normalV2, glm::vec3 barycentricCoords) {
+    glm::vec3 interpolatedNormal;
 
-    glm::vec3 interpolatedNormal(0.0f);
-    for (int i = 0; i <= numberOfValues; ++i) {
-        interpolatedNormal.x += interpolatedNormalsX0[i].x * barycentricCoords.x +
-                                interpolatedNormalsY0[i].x * barycentricCoords.y +
-                                interpolatedNormalsZ0[i].x * barycentricCoords.z;
+    interpolatedNormal.x = normalV0.x * barycentricCoords.x +
+                           normalV1.x * barycentricCoords.y +
+                           normalV2.x * barycentricCoords.z;
 
-        interpolatedNormal.y += interpolatedNormalsX0[i].y * barycentricCoords.x +
-                                interpolatedNormalsY0[i].y * barycentricCoords.y +
-                                interpolatedNormalsZ0[i].y * barycentricCoords.z;
+    interpolatedNormal.y = normalV0.y * barycentricCoords.x +
+                           normalV1.y * barycentricCoords.y +
+                           normalV2.y * barycentricCoords.z;
 
-        interpolatedNormal.z += interpolatedNormalsX0[i].z * barycentricCoords.x +
-                                interpolatedNormalsY0[i].z * barycentricCoords.y +
-                                interpolatedNormalsZ0[i].z * barycentricCoords.z;
-    }
+    interpolatedNormal.z = normalV0.z * barycentricCoords.x +
+                           normalV1.z * barycentricCoords.y +
+                           normalV2.z * barycentricCoords.z;
 
     return glm::normalize(interpolatedNormal);
 }
+
 
 
 
@@ -186,6 +183,7 @@ float proximityLighting (glm::vec3 intersection) {
 float angleOfIncidenceLighting (glm::vec3 intersection, glm::vec3 normal) {
     glm::vec3 lightDirection = glm::normalize(lightSource - intersection);
     float lighting = glm::dot(normal, lightDirection);
+//                std::cout << lighting << std::endl;
     return lighting;
 }
 
@@ -197,6 +195,7 @@ float specularLighting(glm::vec3 intersection, glm::vec3 normal, glm::vec3 camer
     float specularFactor = glm::dot(reflectionDirection, -cameraRayDirection);
     specularFactor = glm::max(specularFactor, 0.0f);
     float lighting = pow(specularFactor, 256); //specular exponent
+//                std::cout << lighting << std::endl;
     return lighting;
 }
 
@@ -267,7 +266,7 @@ float softShadow (glm::vec3 intersection, std::vector<ModelTriangle>& obj) {
 //                std::cout << lighting << std::endl;
             }
         }
-//        std::cout << lighting << std::endl;
+        std::cout << lighting << std::endl;
     }
     return lighting;
 }
@@ -285,9 +284,11 @@ float ambientLighting(std::vector<float> lightingFactors, float ambientThreshold
 
 Colour light(Colour colour, glm::vec3 intersection, ModelTriangle triangle, glm::vec3 cameraRayDirection, std::vector<ModelTriangle>& obj, size_t i) {
     std::vector<float> lightingFactors;
-    glm::vec3 b = findBarycentricCoordinates(intersection, triangle);
-    glm::vec3 normal = interpolateVertexNormal(vertexNorms[triangleIndices[i].triangleIndices[0]], vertexNorms[triangleIndices[i].triangleIndices[1]], vertexNorms[triangleIndices[i].triangleIndices[2]],b);
-    float lighting;
+    glm::vec3 b = barycentricCoordinates(intersection, triangle);
+    glm::vec3 normal = calculatePointNormal(vertexNorms[triangleIndices[i].triangleIndices[0]], vertexNorms[triangleIndices[i].triangleIndices[1]], vertexNorms[triangleIndices[i].triangleIndices[2]],b);
+//glm::vec3 normal = triangle.normal;
+
+float lighting;
     if(proximityLight){
         lighting = proximityLighting(intersection);
         lightingFactors.push_back(lighting);
@@ -455,7 +456,7 @@ int main(int argc, char *argv[]) {
     triangleIndices = std::get<1>(sphere);
     vertexNorms = std::get<2>(sphere);
 
-    lightInitialisation(obj);
+    lightInitialisation(std::get<0>(boxes));
     while (!terminate) {
         if (window.pollForInputEvents(event)) terminate = handleEvent(event, window, cameraToVertex, cameraOrientation, depthBuffer, pause);
         for (int i = 0; i < WIDTH; ++i) {
