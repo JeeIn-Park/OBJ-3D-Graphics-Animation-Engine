@@ -194,7 +194,8 @@ float specularLighting(glm::vec3 intersection, glm::vec3 normal, glm::vec3 camer
 
     float specularFactor = glm::dot(reflectionDirection, -cameraRayDirection);
     specularFactor = glm::max(specularFactor, 0.0f);
-    float lighting = pow(specularFactor, 256); //specular exponent
+    float lighting;
+    if (box) { lighting =  pow(specularFactor, 265);} else {lighting =  pow(specularFactor, 64);}
 //                std::cout << lighting << std::endl;
     return lighting;
 }
@@ -266,7 +267,7 @@ float softShadow (glm::vec3 intersection, std::vector<ModelTriangle>& obj) {
 //                std::cout << lighting << std::endl;
             }
         }
-        std::cout << lighting << std::endl;
+//        std::cout << lighting << std::endl;
     }
     return lighting;
 }
@@ -319,7 +320,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
     for (int x = 0; x < WIDTH; x++) {
         for (int y = 0; y < HEIGHT; y++) {
             glm::vec3 rayDirection = glm::vec3 (-WIDTH/2 + x, HEIGHT/2 - y, -f * HEIGHT/2);
-//            glm::vec3 rayDirection = o * glm::vec3 (2*x/HEIGHT - 2*WIDTH/HEIGHT, 1 - 2*y/HEIGHT, -f);
+//          glm::vec3 rayDirection = o * glm::vec3 (2*x/HEIGHT - 2*WIDTH/HEIGHT, 1 - 2*y/HEIGHT, -f);
             rayDirection = glm::normalize(rayDirection - c);
             rayDirection = glm::normalize(glm::inverse(o) * rayDirection);
             RayTriangleIntersection intersection = getClosestValidIntersection(c, rayDirection, obj, false);
@@ -339,7 +340,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
                         colour = light(colour, reflectedInt.intersectionPoint, reflectedInt.intersectedTriangle, reflected, obj, reflectedInt.triangleIndex);
                         window.setPixelColour(x, y, colour);
                     }
-                } else if (mirror && triangle.colour.name == "Blue") {
+                } else if ((mirror && triangle.colour.name == "Blue") || (mirror && triangle.colour.name == "Magenta")) {
                     glm::vec3 initial = glm::normalize(intersection.intersectionPoint - c);
                     glm::vec3 reflected = initial - 2.0f*(glm::dot(initial, triangle.normal)) * triangle.normal;
                     RayTriangleIntersection reflectedInt = getClosestValidIntersection(intersection.intersectionPoint, reflected, obj,true);
@@ -379,7 +380,14 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
         else if (event.key.keysym.sym == SDLK_KP_MINUS) {(*c).z =  (*c).z + translate;}
         else if (event.key.keysym.sym == SDLK_KP_PLUS) {(*c).z =  (*c).z - translate;}
 
-        //rotate
+//        else if (event.key.keysym.sym == SDLK_LEFT) {lightSource = glm::vec3 (lightSource.x + 0.5, lightSource.y, lightSource.z);}
+//        else if (event.key.keysym.sym == SDLK_RIGHT) {lightSource = glm::vec3 (lightSource.x - 0.5, lightSource.y, lightSource.z);}
+//        else if (event.key.keysym.sym == SDLK_UP) {lightSource = glm::vec3 (lightSource.x, lightSource.y + 0.5, lightSource.z);}
+//        else if (event.key.keysym.sym == SDLK_DOWN) {lightSource = glm::vec3 (lightSource.x, lightSource.y - 0.5, lightSource.z);}
+//        else if (event.key.keysym.sym == SDLK_KP_MINUS) {lightSource = glm::vec3 (lightSource.x, lightSource.y, lightSource.z + 0.5);}
+//        else if (event.key.keysym.sym == SDLK_KP_PLUS) {lightSource = glm::vec3 (lightSource.x, lightSource.y, lightSource.z - 0.5);}
+
+            //rotate
         else if (event.key.keysym.sym == SDLK_a) rotate(c,'a');
         else if (event.key.keysym.sym == SDLK_d) rotate(c,'d');
         else if (event.key.keysym.sym == SDLK_w) rotate(c,'w');
@@ -424,8 +432,8 @@ int main(int argc, char *argv[]) {
     std::cout << "1, 2, 3, 4 to control light!" << std::endl;
 
     // texture
-//    std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/textured-cornell-box.mtl");
-//    std::vector<ModelTriangle> obj = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/textured-cornell-box.obj", mtl, 0.35);
+    std::unordered_map<std::string, Colour> t_mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/textured-cornell-box.mtl");
+    std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> t_boxes = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/textured-cornell-box.obj", t_mtl, 0.35);
 
     // no texture
     std::unordered_map<std::string, Colour> mtl = readMTL("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
@@ -469,10 +477,12 @@ int main(int argc, char *argv[]) {
         }
         lookAt(cameraToVertex, cameraOrientation);
         if (box) {
+            lightSource = glm::vec3(0.0, 0.4, 0.25);
             obj = std::get<0>(boxes);
             triangleIndices = std::get<1>(boxes);
             vertexNorms = std::get<2>(boxes);
         } else {obj = std::get<0>(sphere);
+            lightSource = glm::vec3(4, 6, 5);
             triangleIndices = std::get<1>(sphere);
             vertexNorms = std::get<2>(sphere);}
         if (rayTrace) { drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj); }
