@@ -22,6 +22,7 @@ glm::vec3 lightSource = glm::vec3(0.0, 0.4, 0.25);
 std::vector<glm::vec3> lightPositions;
 std::vector<TriangleInfo> triangleIndices;
 std::vector<glm::vec3> vertexNorms;
+Colour metalSurfaceColour;
 
 bool box = false;
 
@@ -324,15 +325,15 @@ Colour metalReflected (RayTriangleIntersection originalIntersection, glm::vec3 i
     RayTriangleIntersection reflectedIntersection = getClosestValidIntersection(intersection.intersectionPoint, reflectedRay, obj, true);
 
     if (metal && reflectedIntersection.intersectedTriangle.colour.name == "Cyan") {
+        metalSurfaceColour = reflectedIntersection.intersectedTriangle.colour;
         return metalReflected(originalIntersection, reflectedRay, reflectedIntersection, obj, brightness*0.8f);
     } else if (mirror && (reflectedIntersection.intersectedTriangle.colour.name == "Yellow" || reflectedIntersection.intersectedTriangle.colour.name == "Magenta")) {
         return mirrorReflected(originalIntersection, reflectedRay, reflectedIntersection, obj, brightness*0.8f);
     }
     else {
         if (reflectedIntersection.distanceFromCamera < std::numeric_limits<float>::infinity()) {
-            Colour originalColour = originalIntersection.intersectedTriangle.colour;
             Colour reflectedColour = reflectedIntersection.intersectedTriangle.colour;
-            colour = Colour(brightness * ((originalColour.red + reflectedColour.red) / 2), brightness * ((originalColour.green + reflectedColour.green) / 2), brightness * ((originalColour.blue + reflectedColour.blue) / 2));
+            colour = Colour(brightness * ((metalSurfaceColour.red + reflectedColour.red) / 2), brightness * ((metalSurfaceColour.green + reflectedColour.green) / 2), brightness * ((metalSurfaceColour.blue + reflectedColour.blue) / 2));
             colour = light(colour, reflectedIntersection.intersectionPoint, reflectedIntersection.intersectedTriangle, reflectedRay, obj, reflectedIntersection.triangleIndex);
         }
     }
@@ -347,6 +348,7 @@ Colour mirrorReflected (RayTriangleIntersection originalIntersection, glm::vec3 
     RayTriangleIntersection reflectedIntersection = getClosestValidIntersection(intersection.intersectionPoint, reflectedRay, obj, true);
 
     if (metal && reflectedIntersection.intersectedTriangle.colour.name == "Cyan") {
+        metalSurfaceColour = reflectedIntersection.intersectedTriangle.colour;
         return metalReflected(originalIntersection, reflectedRay, reflectedIntersection, obj, brightness*0.8f);
     } else if (mirror && (reflectedIntersection.intersectedTriangle.colour.name == "Yellow" || reflectedIntersection.intersectedTriangle.colour.name == "Magenta")) {
         return mirrorReflected(originalIntersection, reflectedRay, reflectedIntersection, obj, brightness*0.8f);
@@ -379,6 +381,7 @@ void drawRayTracedScene(DrawingWindow &window, glm::vec3 c, glm::mat3 o, float f
 
 //                while brightness threshold
                 if (metal && triangle.colour.name == "Cyan") {
+                    metalSurfaceColour = triangle.colour;
                     Colour colour = metalReflected(intersection, rayDirection, intersection, obj, 0.9f);
                     window.setPixelColour(x, y, colour);
                 } else if (mirror && (triangle.colour.name == "Yellow" || triangle.colour.name == "Magenta")) {
