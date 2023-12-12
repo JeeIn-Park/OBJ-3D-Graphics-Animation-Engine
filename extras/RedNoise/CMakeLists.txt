@@ -38,8 +38,7 @@ add_executable(DrawMain
         src/DrawMain.cpp
         src/ally/raster.cpp
         src/ally/camera_move.cpp
-        src/ally/file_reader.cpp
-        src/memo.cpp)
+        src/ally/file_reader.cpp)
 
 if (MSVC)
     target_compile_options(DrawMain
