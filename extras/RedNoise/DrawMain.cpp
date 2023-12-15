@@ -468,7 +468,7 @@ bool handleEvent(SDL_Event event, DrawingWindow &window, glm::vec3* c, glm::mat3
             v0.texturePoint = TexturePoint(195, 5);
             v1.texturePoint = TexturePoint(395, 380);
             v2.texturePoint = TexturePoint(65, 330);
-            texturedTriangleDraw(window, CanvasTriangle(v0, v1, v2), "texture.ppm", d);
+            texturedTriangleDraw(window, CanvasTriangle(v0, v1, v2), "/computer_graphics/extras/RedNoise/src/texture.ppm", d);
         }
 
     } else if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -488,13 +488,13 @@ int main(int argc, char *argv[]) {
     std::cout << "1, 2, 3, 4 to control light!" << std::endl;
 
     // texture
-    std::unordered_map<std::string, Colour> t_mtl = readMTL("textured-cornell-box.mtl");
-    std::vector<ModelTriangle> t_boxes = readTextureOBJ("textured-cornell-box.obj", t_mtl, 0.35);
+    std::unordered_map<std::string, Colour> t_mtl = readMTL("/computer_graphics/extras/RedNoise/src/textured-cornell-box.mtl");
+    std::vector<ModelTriangle> t_boxes = readTextureOBJ("/computer_graphics/extras/RedNoise/src/textured-cornell-box.obj", t_mtl, 0.35);
 
     // no texture
-    std::unordered_map<std::string, Colour> mtl = readMTL("cornell-box.mtl");
-    std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> boxes = readOBJ("cornell-box.obj", mtl, 0.35);
-    std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> sphere = readOBJ("sphere.obj", mtl, 1);
+    std::unordered_map<std::string, Colour> mtl = readMTL("/computer_graphics/extras/RedNoise/src/cornell-box.mtl");
+    std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> boxes = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/cornell-box.obj", mtl, 0.35);
+    std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> sphere = readOBJ("/home/jeein/Documents/CG/computer_graphics/extras/RedNoise/src/sphere.obj", mtl, 1);
 
 
     glm::vec3* cameraToVertex = new glm::vec3 (0.0, 0.0, 4.0);
@@ -550,7 +550,7 @@ int main(int argc, char *argv[]) {
         if (rayTrace) { drawRayTracedScene(window, *cameraToVertex, *cameraOrientation, *f, obj); }
         else {
             objFaceDraw(window, obj, cameraToVertex, cameraOrientation, f, HEIGHT, depthBuffer,
-                        "texture.ppm");
+                        "/computer_graphics/extras/RedNoise/src/texture.ppm");
         }
         window.renderFrame();
     }

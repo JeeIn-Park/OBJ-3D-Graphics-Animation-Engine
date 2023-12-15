@@ -26,3 +26,4 @@ std::vector<int> findAdjacentFacets(const std::vector<ModelTriangle>& obj, int f
 glm::vec3 computeTriangleNormal(const ModelTriangle& triangle);
 std::unordered_map<std::string, Colour> readMTL(const std::string &filename);
 std::tuple<std::vector<ModelTriangle>, std::vector<TriangleInfo>, std::vector<glm::vec3>> readOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s);
+std::vector<ModelTriangle> readTextureOBJ(const std::string &filename, std::unordered_map<std::string, Colour> colourMap, float s);

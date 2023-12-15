@@ -10,8 +10,8 @@
 #include "TexturePoint.h"
 #include "ModelTriangle.h"
 
-#define WIDTH 320
-#define HEIGHT 240
+#define WIDTH 640
+#define HEIGHT 480
 
 
 
