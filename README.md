@@ -7,21 +7,34 @@ This project is a 3D Rendering and Animation Engine designed to render realistic
 
 ## Features
 
-- **OBJ Geometry File Loading:** Load and render 3D models from OBJ files.
-- **OBJ Material File Loading:** Load materials associated with OBJ files.
-    
-- **Wireframe 3D Scene Rendering:** Render 3D scenes in a wireframe mode.
-- **Flat Colour 3D Scene Rasterising:** Render 3D scenes with flat colors.
-- **Keyboard Control of Camera Orientation:** Control the camera's orientation using a matrix for rotation.
+### Core Functionality
+- **OBJ Geometry and Material File Loading:**
+  - Implemented an OBJ file reader to load and render 3D models.
+  - Supported loading of associated materials for enhanced realism.
 
-- **Surface Texture Mapping:** Apply textures to surfaces for more detailed rendering.
-- **Hard Shadow Rendering:** Render shadows with hard edges (without soft shadows).
-- **Soft Shadow Rendering:** - Smooth and elegant soft shadows.
-- **Ambient Lighting:** Implement ambient lighting as a minimum threshold or universal light supplement.
-- **Diffuse Lighting:** Calculate and render light based on proximity and angle of incidence.
-- **Specular Lighting:** - Visible specular highlights (specular spots).
+- **Rendering Techniques:**
+  - **Wireframe 3D Scene Rendering:** Rendered 3D scenes in a wireframe mode, providing a structural view of models.
+  - **Flat Colour 3D Scene Rasterising:** Rendered 3D scenes with flat colors for simple but effective visual representation.
+  - **Surface Texture Mapping:** Applied detailed textures to surfaces for more realistic rendering.
+  
+- **Camera Control:**
+  - Integrated keyboard control for camera orientation using an orientation matrix, allowing dynamic viewing angles.
 
-- **Reflective Materials:** Implement materials like mirrors and metals that reflect light.
+### Advanced Lighting and Shading
+- **Lighting Techniques:**
+  - **Ambient Lighting:** Implemented ambient lighting to ensure a minimum light threshold or universal light supplement across the scene.
+  - **Diffuse Lighting:** Calculated and rendered lighting based on proximity and angle of incidence, contributing to the realism of objects.
+  - **Specular Lighting:** Added visible specular highlights (specular spots) to represent shiny surfaces and light reflections.
 
-- **Gouraud Shading:** Smooth shading technique to interpolate vertex colors.
-- **Phong Shading:** Implement Phong shading for smoother lighting and shading.
+- **Shading Techniques:**
+  - **Gouraud Shading:** Applied smooth shading by interpolating vertex colors across surfaces.
+  - **Phong Shading:** Enhanced smoothness and lighting effects with Phong shading for more sophisticated visual outcomes.
+
+### Shadow Rendering and Reflection
+- **Shadow Rendering:**
+  - **Hard Shadow Rendering:** Produced shadows with hard edges for stark contrast.
+  - **Soft Shadow Rendering:** Implemented smooth and elegant soft shadows for a more natural look.
+
+- **Reflective Materials:**
+  - Integrated reflective materials such as mirrors and metals that interact with lighting to reflect their surroundings.
+
