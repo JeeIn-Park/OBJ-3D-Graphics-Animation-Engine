@@ -1,4 +1,4 @@
-# Realistic 3D Graphics Engine
+# 3D Graphics Engine
 
 **Project Duration:** Sep. 2023 -- Dec. 2023  
 **Technologies Used:** C++ with SDL2
