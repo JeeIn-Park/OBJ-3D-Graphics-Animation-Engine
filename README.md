@@ -38,6 +38,8 @@ This project is a 3D Rendering and Animation Engine designed to render realistic
   - **Ambient Lighting:** Implemented ambient lighting to ensure a minimum light threshold or universal light supplement across the scene.
   - **Diffuse Lighting:** Calculated and rendered lighting based on proximity and angle of incidence, contributing to the realism of objects.
   - **Specular Lighting:** Added visible specular highlights (specular spots) to represent shiny surfaces and light reflections.
+  - **Hard Shadow Rendering:** Produced shadows with hard edges for stark contrast.
+  - **Soft Shadow Rendering:** Implemented smooth and elegant soft shadows for a more natural look.
     
     ![Lighting Techniques](./doc/lighting.gif)
 
@@ -45,13 +47,10 @@ This project is a 3D Rendering and Animation Engine designed to render realistic
 - **Reflective Materials:**
   - Integrated reflective materials such as mirrors and metals that interact with lighting to reflect their surroundings.
     
-    ![Material Loading](./doc/materials.gif)
-
-
-  - **Hard Shadow Rendering:** Produced shadows with hard edges for stark contrast.
-  - **Soft Shadow Rendering:** Implemented smooth and elegant soft shadows for a more natural look.
-    
     ![Reflective Materials](./doc/reflection.gif)
+
+  
+    ![Material Loading](./doc/materials.gif)
 
  
 - **Shading Techniques:**
