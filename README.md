@@ -2,7 +2,6 @@
 
 **Project Duration:** Sep. 2023 -- Dec. 2023  
 **Technologies Used:** C++ with SDL2
-![Reflective Materials](./doc/reflection.gif)
 ![Material Loading](./doc/materials.gif)
 ![Phong Shading](./doc/phong.gif)
 
